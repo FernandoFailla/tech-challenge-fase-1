@@ -490,7 +490,7 @@ SPRINT [X]: [NOME]
 - Necessidade de redistribuir tarefas
 
 **Comunicar via:**
-- Discord (canal #tech-help ou DM)
+- Discord (canal #tech-challenge ou DM)
 - Marcar nos comentários da issue
 - Tag `@tech-lead` no GitHub
 
@@ -573,7 +573,7 @@ A: Pode, mas mantenha as obrigatórias: PyTorch, FastAPI, scikit-learn, MLflow, 
 A: Altamente recomendado para garantir reprodutibilidade. Eduardo pode ajudar.
 
 **Q: E se eu tiver problema com alguma instalação?**  
-A: Pergunte no canal #tech-help no Discord. Alguém do time vai ajudar.
+A: Pergunte no canal #tech-challenge no Discord. Alguém do time vai ajudar.
 
 ### Sobre Avaliação
 
