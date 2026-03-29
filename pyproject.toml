@@ -1,0 +1,39 @@
+[project]
+name = "TechChallenge1ChurnTelco"
+version = "0.1.0"
+description = "Solução Completa para o Tech Challenge 1 da pós-graduação MLE da FIAP."
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "fastapi>=0.135.2",
+    "pandas>=3.0.1",
+    "scikit-learn>=1.8.0",
+]
+authors = [
+  {name = "Fernando Failla Foschiani", email = "fefailla68@gmail.com"}
+]
+
+[dependency-groups]
+dev = [
+    "mypy>=1.19.1",
+    "pre-commit>=4.5.1",
+    "pytest>=9.0.2",
+    "ruff>=0.15.8",
+    "mlflow>=1.27.0",
+    "torch>=2.11.0",
+]
+
+[tool.ruff] # Configurando tools do pyprojetct. Tools sao usadas para configurar linters, formatadores e outras ferramentas de desenvolvimento.
+# Numero maximo de linhas 79, seguindo padrao da documentacao ruff.
+line-length = 79
+
+[tool.ruff.lint]
+preview = true
+extend-select = ['I', 'F', 'E', 'W', 'PL', 'PT'] # Recomendacoes do dunossauro no curso de FASTApi, https://fastapidozero.dunossauro.com/estavel/01/?h=ruff#ruff
+
+[tool.mypy]
+python_version = 3.13
+disallow_untyped_defs = true # Toda nova funcao deve ter tipo definido, seguindo boas praticas de tipagem.
+exclude =[
+  "notebooks" # Excluindo notebooks do mypy, pois eles geralmente sao usados para experimentacao e podem conter codigo mais flexivel.
+]
