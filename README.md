@@ -59,6 +59,64 @@ python -m venv .venv
 pip install -U pip
 ```
 
+## Sincronização do Ambiente
+
+Para sincronizar o ambiente incluindo pacotes de desenvolvimento utilizando o uv, use:
+
+```bash
+uv sync
+```
+
+Para sincronizar sem dependências de desenvolvimento, útil para CI e containers Docker, use:
+
+```bash
+uv sync --no-dev
+```
+
+## Stack e versões definidas
+
+Referência consolidada com base nas decisões já registradas nas PRs em andamento.
+
+- **Python:** `>=3.13`
+- **Dependências base:**
+  - `fastapi>=0.135.2`
+  - `pandas>=2.0.0,<3.0.0`
+  - `scikit-learn>=1.8.0`
+  - `mlflow>=2.0.0`
+- **Dependências de desenvolvimento:**
+  - `ruff>=0.15.8`
+  - `mypy>=1.19.1`
+  - `pytest>=9.0.2`
+  - `pytest-cov>=7.1.0`
+  - `pre-commit>=4.5.1`
+
+### Qualidade e testes (padrões iniciais)
+
+- lint e formatação com **Ruff**;
+- tipagem estática com **MyPy**;
+- testes com **Pytest**;
+- cobertura mínima alvo em `src`: **80%**.
+
+## Configuração de Variáveis de Ambiente
+
+Para configuração local, copie o arquivo de exemplo:
+
+```bash
+cp .env.example .env
+```
+
+Preencha no `.env` as variáveis essenciais para começar:
+
+```bash
+ENVIRONMENT=development
+DEBUG=true
+API_TOKEN=seu_token_seguro_aqui
+MLFLOW_TRACKING_URI=file:./mlruns
+MLFLOW_EXPERIMENT_NAME=tech-challenge-fase-1
+```
+
+> 🔒 Segurança: nunca versionar o arquivo `.env` com credenciais reais.
+
 ## Comandos básicos
 
 Comandos disponíveis no momento (validação local):
