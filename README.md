@@ -40,3 +40,23 @@ Para sincronizar sem dependências de desenolvimento, útil para CI e contâiner
 ```bash
 uv sync --no-dev
 ```
+
+## Como usar o MLflow
+
+### Iniciar
+
+```bash
+cd docker
+docker-compose up -d
+```
+
+### Acessar
+
+- MLflow UI: http://localhost:5000
+
+### Parar
+
+```bash
+cd docker
+docker-compose down
+```

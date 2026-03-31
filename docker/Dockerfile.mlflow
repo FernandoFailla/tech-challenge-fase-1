@@ -1,0 +1,11 @@
+# Dockerfile para MLflow com suporte a PostgreSQL e S3 (MinIO)
+# Estende a imagem oficial do MLflow adicionando drivers necessários
+
+FROM ghcr.io/mlflow/mlflow:v2.21.0
+
+# Instala dependências necessárias para PostgreSQL e S3
+USER root
+RUN pip install --no-cache-dir \
+    psycopg2-binary \
+    boto3 \
+    && rm -rf /root/.cache/pip
