@@ -46,17 +46,9 @@ uv sync --no-dev
 ### Iniciar
 
 ```bash
-cd docker
-docker-compose up -d
+docker-compose -f docker/docker-compose.yml up --build
 ```
 
 ### Acessar
 
 - MLflow UI: http://localhost:5000
-
-### Parar
-
-```bash
-cd docker
-docker-compose down
-```
