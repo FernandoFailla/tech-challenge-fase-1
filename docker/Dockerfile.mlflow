@@ -1,7 +1,11 @@
 # Dockerfile para MLflow com suporte a PostgreSQL e S3 (MinIO)
 # Estende a imagem oficial do MLflow adicionando drivers necessários
 
+<<<<<<< HEAD
 FROM ghcr.io/mlflow/mlflow:v3.10.1
+=======
+FROM ghcr.io/mlflow/mlflow:v2.21.0
+>>>>>>> c2c42ab (feat: implementa setup local de MLflow com PostgreSQL e MinIO (#45))
 
 # Instala dependências necessárias para PostgreSQL e S3
 USER root
