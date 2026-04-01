@@ -41,12 +41,35 @@ Para sincronizar sem dependências de desenolvimento, útil para CI e contâiner
 uv sync --no-dev
 ```
 
-## Como usar o MLflow
+## Comandos Disponíveis (Makefile)
 
-### Iniciar
+O projeto inclui um Makefile com comandos essenciais para desenvolvimento:
+
+### Setup
 
 ```bash
-docker-compose -f docker/docker-compose.yml up --build
+make setup        # Configurar ambiente (uv sync + pre-commit)
+```
+
+### Docker (MLflow)
+
+```bash
+make docker-up    # Iniciar MLflow em background (requer .env)
+make docker-down  # Parar todos os containers MLflow
+```
+
+### Desenvolvimento
+
+```bash
+make test         # Rodar testes com cobertura
+make lint         # Verificar código com ruff
+make format       # Formatar código com ruff
+```
+
+### Ajuda
+
+```bash
+make help         # Mostrar todos os comandos disponíveis
 ```
 
 ### Acessar
