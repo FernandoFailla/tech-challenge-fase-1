@@ -1,181 +1,181 @@
-# AGENTS.md - Coding Guidelines for TechChallenge1ChurnTelco
+# AGENTS.md - Diretrizes de Codificação para TechChallenge1ChurnTelco
 
-This file provides essential information for AI coding agents working on this ML project.
+Este arquivo fornece informações essenciais para agentes de IA que trabalham neste projeto de ML.
 
-## Project Overview
+## Visão Geral do Projeto
 
-This is a Python 3.12+ machine learning project for FIAP's MLE post-graduation Tech Challenge. It uses MLflow for experiment tracking, FastAPI for serving, and scikit-learn for modeling.
+Este é um projeto de machine learning em Python 3.12+ para o Tech Challenge da pós-graduação MLE da FIAP. Utiliza MLflow para rastreamento de experimentos, FastAPI para serviço e scikit-learn para modelagem.
 
-## Core Philosophy: Simplicity First
+## Filosofia Central: Simplicidade em Primeiro Lugar
 
-**Code must always be simple, concise, and functional.**
+**O código deve ser sempre simples, conciso e funcional.**
 
-When adding or changing anything:
-- **Prefer simplicity** - Avoid over-engineering and unnecessary complexity
-- **Do the minimum** - Plan to write only what's needed to solve the problem
-- **Be direct** - No fluff, no unnecessary abstractions, no "just in case" features
-- **Function over form** - Working code beats perfect architecture
-- **Less is more** - Fewer lines, fewer files, fewer dependencies = better
-- **Question every addition** - Does this really need to be added? Can it be simpler?
+Ao adicionar ou alterar qualquer coisa:
+- **Prefira simplicidade** - Evite engenharia excessiva e complexidade desnecessária
+- **Faça o mínimo** - Planeje escrever apenas o necessário para resolver o problema
+- **Seja direto** - Sem enfeites, sem abstrações desnecessárias, sem recursos "só por precaução"
+- **Função sobre forma** - Código funcionando vence arquitetura perfeita
+- **Menos é mais** - Menos linhas, menos arquivos, menos dependências = melhor
+- **Questione cada adição** - Isso realmente precisa ser adicionado? Pode ser mais simples?
 
-**Examples of what to avoid:**
-- Complex class hierarchies when functions suffice
-- Abstraction layers that don't provide immediate value
-- Generic "frameworks" for simple tasks
-- Future-proofing for hypothetical scenarios
-- Boilerplate that doesn't add functionality
+**Exemplos do que evitar:**
+- Hierarquias de classes complexas quando funções bastam
+- Camadas de abstração que não fornecem valor imediato
+- "Frameworks" genéricos para tarefas simples
+- Preparação para cenários hipotéticos futuros
+- Código boilerplate que não adiciona funcionalidade
 
-**When in doubt, choose the simpler option.**
+**Em caso de dúvida, escolha a opção mais simples.**
 
-## Build/Lint/Test Commands
+## Comandos de Build/Lint/Test
 
-All commands use `uv` as the package manager:
+Todos os comandos usam `uv` como gerenciador de pacotes:
 
 ```bash
-# Setup environment
-make setup                    # Install deps and pre-commit hooks
-uv sync                       # Install all dependencies
-uv sync --no-dev             # Production only (CI/Docker)
+# Configuração do ambiente
+make setup                    # Instalar deps e hooks do pre-commit
+uv sync                       # Instalar todas as dependências
+uv sync --no-dev             # Apenas produção (CI/Docker)
 
-# Testing
-make test                     # Run all tests with coverage
-uv run pytest tests/ -v      # Run all tests (verbose)
-uv run pytest tests/test_file.py -v              # Single test file
-uv run pytest tests/test_file.py::test_func -v   # Single test function
-uv run pytest -m fast -v     # Run only fast tests
-uv run pytest -m slow -v     # Run only slow tests
+# Testes
+make test                     # Executar todos os testes com cobertura
+uv run pytest tests/ -v      # Executar todos os testes (verbose)
+uv run pytest tests/test_file.py -v              # Arquivo de teste único
+uv run pytest tests/test_file.py::test_func -v   # Função de teste única
+uv run pytest -m fast -v     # Executar apenas testes rápidos
+uv run pytest -m slow -v     # Executar apenas testes de integração
 
-# Coverage requirements: 80% minimum on src/
-# Coverage config is in pyproject.toml
+# Requisitos de cobertura: 80% mínimo em src/
+# Configuração de cobertura está em pyproject.toml
 
-# Linting and Formatting
-make lint                    # Check code with ruff
-make format                  # Format code with ruff
-uv run ruff check .          # Manual lint check
-uv run ruff check . --fix    # Auto-fix issues
-uv run ruff format .         # Manual format
+# Linting e Formatação
+make lint                    # Verificar código com ruff
+make format                  # Formatar código com ruff
+uv run ruff check .          # Verificação manual de lint
+uv run ruff check . --fix    # Auto-corrigir problemas
+uv run ruff format .         # Formatação manual
 
-# Type Checking
-uv run mypy src/             # Check types (strict mode enabled)
+# Verificação de Tipos
+uv run mypy src/             # Verificar tipos (modo estrito habilitado)
 
 # Pre-commit
-uv run pre-commit run --all-files     # Run all hooks
-uv run pre-commit run ruff --all-files # Run specific hook
+uv run pre-commit run --all-files     # Executar todos os hooks
+uv run pre-commit run ruff --all-files # Executar hook específico
 
 # MLflow (Docker)
-make docker-up               # Start MLflow + PostgreSQL + MinIO
+make docker-up               # Iniciar MLflow + PostgreSQL + MinIO
 docker-compose -f docker/docker-compose.yml up -d
-make docker-down             # Stop all containers
+make docker-down             # Parar todos os containers
 ```
 
-## Code Style Guidelines
+## Diretrizes de Estilo de Código
 
-### Python Version and Imports
-- Use Python 3.12+ features (requires-python = ">=3.12,<3.14")
-- Always use `from __future__ import annotations` at the top
-- Import order: stdlib → third-party → local (enforced by ruff I rule)
-- Use `TYPE_CHECKING` for imports only needed for type hints
+### Versão do Python e Imports
+- Use recursos do Python 3.12+ (requires-python = ">=3.12,<3.14")
+- Sempre use `from __future__ import annotations` no topo
+- Ordem de imports: stdlib → terceiros → locais (imposto pela regra I do ruff)
+- Use `TYPE_CHECKING` para imports necessários apenas para type hints
 
-### Type Hints (Strict)
-- **All functions must have type hints** (`disallow_untyped_defs = true`)
-- Use modern syntax: `list[str]`, `dict[str, Any]`, `str | None`
-- Use `NDArray[Any]` from `numpy.typing` for array types
-- Use Protocols for interface definitions
+### Type Hints (Estrito)
+- **Todas as funções devem ter type hints** (`disallow_untyped_defs = true`)
+- Use sintaxe moderna: `list[str]`, `dict[str, Any]`, `str | None`
+- Use `NDArray[Any]` de `numpy.typing` para tipos de array
+- Use Protocols para definições de interfaces
 
-### Formatting
-- Line length: **79 characters** (PEP 8 standard)
-- Use ruff for both linting and formatting
-- Ruff rules enabled: I (imports), F (Pyflakes), E/W (pycodestyle), PL (pylint), PT (pytest)
+### Formatação
+- Comprimento de linha: **79 caracteres** (padrão PEP 8)
+- Use ruff tanto para linting quanto para formatação
+- Regras do Ruff habilitadas: I (imports), F (Pyflakes), E/W (pycodestyle), PL (pylint), PT (pytest)
 
-### Naming Conventions
-- Classes: `PascalCase` (e.g., `ExperimentRunner`, `ModelConfig`)
-- Functions/variables: `snake_case` (e.g., `run_experiment`, `model_name`)
-- Constants: `UPPER_CASE` (e.g., `HTTP_OK`, `DEFAULT_PORT`)
-- Private: `_leading_underscore` for internal use
-- Enums: Use `auto()` for values when appropriate
+### Convenções de Nomenclatura
+- Classes: `PascalCase` (ex: `ExperimentRunner`, `ModelConfig`)
+- Funções/variáveis: `snake_case` (ex: `run_experiment`, `model_name`)
+- Constantes: `UPPER_CASE` (ex: `HTTP_OK`, `DEFAULT_PORT`)
+- Privadas: `_leading_underscore` para uso interno
+- Enums: Use `auto()` para valores quando apropriado
 
-### Code Structure
-- Use `@dataclass` for configuration objects (prefer `frozen=True`)
-- Use `@dataclass` for entities with `field(default_factory=list)` for mutable defaults
-- Use Protocols for dependency injection and interfaces
-- Prefer static methods in trainer/utility classes
-- Organize imports: stdlib, third-party, local with blank lines between
+### Estrutura do Código
+- Use `@dataclass` para objetos de configuração (prefira `frozen=True`)
+- Use `@dataclass` para entidades com `field(default_factory=list)` para padrões mutáveis
+- Use Protocols para injeção de dependência e interfaces
+- Prefira métodos estáticos em classes de treino/utilitárias
+- Organize imports: stdlib, terceiros, locais com linhas em branco entre eles
 
-### Error Handling
-- Use specific exceptions when possible
-- Use `try/except` with context managers
-- Log errors appropriately using logging module
-- For expected errors: `except SpecificException as e:`
-- For general catching (use sparingly): `except Exception as e:  # noqa: BLE001`
-- Return boolean status for validation functions
+### Tratamento de Erros
+- Use exceções específicas quando possível
+- Use `try/except` com context managers
+- Registre erros apropriadamente usando o módulo logging
+- Para erros esperados: `except SpecificException as e:`
+- Para captura geral (use com moderação): `except Exception as e:  # noqa: BLE001`
+- Retorne status booleano para funções de validação
 
-### Documentation
-- All modules need docstrings with triple quotes
-- All public functions need docstrings
-- Use Google-style or standard docstrings
-- Add type hints instead of documenting types in docstrings
+### Documentação
+- Todos os módulos precisam de docstrings com aspas triplas
+- Todas as funções públicas precisam de docstrings
+- Use docstrings no estilo Google ou padrão
+- Adicione type hints em vez de documentar tipos nas docstrings
 
-### Testing
-- Test files: `tests/test_*.py`
-- Test markers: `@pytest.mark.fast` for quick tests, `@pytest.mark.slow` for integration
-- Minimum coverage: 80% on `src/`
-- Use pytest fixtures for shared setup
-- Mock external services (MLflow, databases) in unit tests
+### Testes
+- Arquivos de teste: `tests/test_*.py`
+- Marcadores de teste: `@pytest.mark.fast` para testes rápidos, `@pytest.mark.slow` para integração
+- Cobertura mínima: 80% em `src/`
+- Use fixtures do pytest para setup compartilhado
+- Mock serviços externos (MLflow, bancos de dados) em testes unitários
 
-### MLflow Integration
-- Load config from environment using `MLflowConfig.from_env()`
-- Use `python-dotenv` for `.env` file support
-- Always use context managers: `with mlflow.start_run():`
-- Log params with `mlflow.log_param()`, metrics with `mlflow.log_metric()`
-- Log models with appropriate flavor: `mlflow.sklearn.log_model()`
+### Integração MLflow
+- Carregue config do ambiente usando `MLflowConfig.from_env()`
+- Use `python-dotenv` para suporte a arquivo `.env`
+- Sempre use context managers: `with mlflow.start_run():`
+- Registre params com `mlflow.log_param()`, métricas com `mlflow.log_metric()`
+- Registre modelos com flavor apropriado: `mlflow.sklearn.log_model()`
 
-### Project Structure Rules
-- **NO artifacts in notebooks** - notebooks are for exploration only
-- Final artifacts (models, datasets) go in `src/pipelines/` as parameterized scripts
-- Data goes in `data/`, models in `models/`, docs in `docs/`
-- Source code organized: `api/`, `data/`, `features/`, `training/`, `inference/`, `pipelines/`, `schemas/`
+### Regras de Estrutura do Projeto
+- **SEM artefatos em notebooks** - notebooks são apenas para exploração
+- Artefatos finais (modelos, datasets) vão em `src/pipelines/` como scripts parametrizados
+- Dados vão em `data/`, modelos em `models/`, docs em `docs/`
+- Código fonte organizado: `api/`, `data/`, `features/`, `training/`, `inference/`, `pipelines/`, `schemas/`
 
-### Environment Management
-- Use `.env` file for local configuration (copy from `.env.example`)
-- Never commit `.env` files
-- Use `python-dotenv` for loading environment variables
-- Docker Compose uses `.env` file automatically
+### Gerenciamento de Ambiente
+- Use arquivo `.env` para configuração local (copie de `.env.example`)
+- Nunca commite arquivos `.env`
+- Use `python-dotenv` para carregar variáveis de ambiente
+- Docker Compose usa arquivo `.env` automaticamente
 
-### Dependencies
-- Production deps: listed in `[project] dependencies`
-- Dev deps: listed in `[dependency-groups] dev`
-- Use `uv add <package>` to add production dependencies
-- Use `uv add --dev <package>` to add dev dependencies
-- Lock file `uv.lock` must be committed
+### Dependências
+- Deps de produção: listadas em `[project] dependencies`
+- Deps de dev: listadas em `[dependency-groups] dev`
+- Use `uv add <package>` para adicionar dependências de produção
+- Use `uv add --dev <package>` para adicionar dependências de dev
+- Arquivo de lock `uv.lock` deve ser commitado
 
-### Git Workflow
-- Pre-commit hooks run automatically on commit
-- CI autofixes PRs with pre-commit
-- Use conventional commit messages
+### Fluxo de Trabalho Git
+- Hooks do pre-commit rodam automaticamente no commit
+- CI corrige automaticamente PRs com pre-commit
+- Use mensagens de commit convencionais
 
-## Project Architecture
+## Arquitetura do Projeto
 
-### Directory Structure
+### Estrutura de Diretórios
 ```
 src/
-├── api/           # FastAPI application and endpoints
-├── data/          # Data loading and validation
-├── eda/           # Exploratory data analysis tools
-├── features/      # Feature engineering pipelines
-├── inference/     # Model serving and prediction
-├── pipelines/     # End-to-end training pipelines
-├── schemas/       # Pydantic models and data contracts
-└── training/      # Model training and evaluation
-data/              # Raw and processed datasets
-models/            # Saved model artifacts
-tests/             # Unit and integration tests
-notebooks/         # Jupyter notebooks for exploration
-docs/              # Documentation and reports
+├── api/           # Aplicação FastAPI e endpoints
+├── data/          # Carregamento e validação de dados
+├── eda/           # Ferramentas de análise exploratória de dados
+├── features/      # Pipelines de engenharia de features
+├── inference/     # Serviço de modelo e predição
+├── pipelines/     # Pipelines de treino end-to-end
+├── schemas/       # Modelos Pydantic e contratos de dados
+└── training/      # Treino e avaliação de modelo
+data/              # Datasets brutos e processados
+models/            # Artefatos de modelo salvos
+tests/             # Testes unitários e de integração
+notebooks/         # Notebooks Jupyter para exploração
+docs/              # Documentação e relatórios
 ```
 
-### Key Design Patterns
-- **Configuration as Code**: Use dataclasses for all config objects
-- **Protocol-based Interfaces**: Define contracts with typing.Protocol
-- **Static Methods**: Prefer `@staticmethod` for utility functions
-- **Context Managers**: Use `with` statements for resource management
-- **Immutable Data**: Use `frozen=True` in dataclasses where possible
+### Padrões de Design Principais
+- **Configuration as Code**: Use dataclasses para todos os objetos de configuração
+- **Protocol-based Interfaces**: Defina contratos com typing.Protocol
+- **Static Methods**: Prefira `@staticmethod` para funções utilitárias
+- **Context Managers**: Use instruções `with` para gerenciamento de recursos
+- **Immutable Data**: Use `frozen=True` em dataclasses quando possível

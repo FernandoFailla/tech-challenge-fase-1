@@ -24,6 +24,15 @@ from rich.panel import Panel
 from rich.table import Table
 from rich.text import Text
 
+# Import condicional para mlflow (dependência opcional)
+try:
+    import mlflow
+    from mlflow.tracking import MlflowClient
+
+    MLFLOW_AVAILABLE = True
+except ImportError:
+    MLFLOW_AVAILABLE = False
+
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
@@ -37,6 +46,9 @@ logger = logging.getLogger(__name__)
 
 # Console Rich para output bonito
 console = Console()
+
+# Constantes
+HTTP_OK = 200
 
 
 @dataclass
@@ -105,7 +117,7 @@ class MLflowValidator:
                 status=False,
                 message=f"❌ Erro ao verificar containers: {e}",
             )
-        except asyncio.TimeoutError:
+        except TimeoutError:
             return CheckResult(
                 name="Docker Containers",
                 status=False,
@@ -130,7 +142,7 @@ class MLflowValidator:
                 timeout=5.0,
             )
 
-            if response.status_code == 200:
+            if response.status_code == HTTP_OK:
                 return CheckResult(
                     name="MLflow Health",
                     status=True,
@@ -147,7 +159,10 @@ class MLflowValidator:
             return CheckResult(
                 name="MLflow Health",
                 status=False,
-                message=f"❌ Não foi possível conectar ao MLflow em {self.tracking_uri}",
+                message=(
+                    f"❌ Não foi possível conectar ao MLflow em "
+                    f"{self.tracking_uri}"
+                ),
             )
         except Exception as e:  # noqa: BLE001
             return CheckResult(
@@ -166,7 +181,7 @@ class MLflowValidator:
                 timeout=5.0,
             )
 
-            if response.status_code == 200:
+            if response.status_code == HTTP_OK:
                 data = response.json()
                 experiments: Sequence[dict] = data.get("experiments", [])
                 return CheckResult(
@@ -191,7 +206,8 @@ class MLflowValidator:
                 message=f"❌ Erro ao acessar API: {e}",
             )
 
-    async def _check_minio(self, client: httpx.AsyncClient) -> CheckResult:
+    @staticmethod
+    async def _check_minio(client: httpx.AsyncClient) -> CheckResult:
         """Verifica se o MinIO está acessível."""
         console.print("\n[blue]🔍 Verificando MinIO...[/blue]")
 
@@ -201,7 +217,7 @@ class MLflowValidator:
                 timeout=5.0,
             )
 
-            if response.status_code == 200:
+            if response.status_code == HTTP_OK:
                 return CheckResult(
                     name="MinIO",
                     status=True,
@@ -219,7 +235,10 @@ class MLflowValidator:
             return CheckResult(
                 name="MinIO",
                 status=False,
-                message="⚠️ MinIO não está rodando (pode estar usando versão simples)",
+                message=(
+                    "⚠️ MinIO não está rodando "
+                    "(pode estar usando versão simples)"
+                ),
             )
         except Exception as e:  # noqa: BLE001
             return CheckResult(
@@ -232,10 +251,15 @@ class MLflowValidator:
         """Testa a conexão via cliente Python MLflow."""
         console.print("\n[blue]🔍 Testando cliente Python MLflow...[/blue]")
 
-        try:
-            import mlflow
-            from mlflow.tracking import MlflowClient
+        if not MLFLOW_AVAILABLE:
+            return CheckResult(
+                name="Python Client",
+                status=False,
+                message="❌ MLflow não está instalado no Python",
+                details=["💡 Instale com: pip install mlflow"],
+            )
 
+        try:
             mlflow.set_tracking_uri(self.tracking_uri)
             mlflow_client = MlflowClient()
 
@@ -265,13 +289,6 @@ class MLflowValidator:
                 details=details,
             )
 
-        except ImportError:
-            return CheckResult(
-                name="Python Client",
-                status=False,
-                message="❌ MLflow não está instalado no Python",
-                details=["💡 Instale com: pip install mlflow"],
-            )
         except Exception as e:  # noqa: BLE001
             return CheckResult(
                 name="Python Client",

@@ -54,3 +54,6 @@ logs/
 
 # Tests
 .coverage
+
+# AI Jail - Conf customizada
+.ai-jail

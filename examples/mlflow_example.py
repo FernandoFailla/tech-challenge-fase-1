@@ -10,9 +10,8 @@ from __future__ import annotations
 import logging
 import os
 import sys
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from enum import Enum, auto
-from pathlib import Path
 from typing import TYPE_CHECKING, Any, Protocol
 
 import mlflow
@@ -22,7 +21,7 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
 from rich.text import Text
-from sklearn.base import BaseEstimator, ClassifierMixin
+from sklearn.base import BaseEstimator
 from sklearn.datasets import load_iris, load_wine
 from sklearn.ensemble import GradientBoostingClassifier, RandomForestClassifier
 from sklearn.metrics import (
@@ -34,7 +33,6 @@ from sklearn.metrics import (
 from sklearn.model_selection import train_test_split
 
 if TYPE_CHECKING:
-    from collections.abc import Sequence
     from numpy.typing import NDArray
 
 # Configuração de logging
@@ -130,8 +128,8 @@ class ModelTrainer(Protocol):
 class SklearnTrainer:
     """Treinador para modelos sklearn."""
 
+    @staticmethod
     def train(
-        self,
         model: BaseEstimator,
         X_train: NDArray[Any],
         y_train: NDArray[Any],
@@ -140,8 +138,8 @@ class SklearnTrainer:
         model.fit(X_train, y_train)
         return model
 
+    @staticmethod
     def evaluate(
-        self,
         model: BaseEstimator,
         X_test: NDArray[Any],
         y_test: NDArray[Any],
@@ -311,7 +309,7 @@ def verify_mlflow_connection(config: MLflowConfig) -> bool:
     except Exception as e:  # noqa: BLE001
         console.print(f"[red]❌ Erro ao conectar ao MLflow: {e}[/red]")
         console.print(
-            "\n[yellow]💡 Certifique-se de que o servidor está rodando:[/yellow]"
+            "\n[yellow]💡 Certifique-se de que o servidor " "está rodando:[/yellow]"
         )
         console.print("   ./mlflow.sh start")
         return False
