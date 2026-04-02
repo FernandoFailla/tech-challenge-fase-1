@@ -52,11 +52,11 @@ format:
 docker-up:
 	$(ENV_ERROR)
 	@echo "🐳 Iniciando MLflow em background..."
-	docker-compose -f docker/docker-compose.yml --env-file .env up -d
+	docker compose -f docker/docker-compose.yml --env-file .env up -d
 	@echo "✅ MLflow iniciado! Acesse http://localhost:$$(grep -E '^MLFLOW_PORT=' .env | cut -d '=' -f2) para usar."
 
 # Parar Docker
 docker-down:
 	@echo "🛑 Parando containers MLflow..."
-	docker-compose -f docker/docker-compose.yml --env-file .env down
+	docker compose -f docker/docker-compose.yml --env-file .env down
 	@echo "✅ Containers parados!"
