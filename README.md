@@ -30,6 +30,34 @@ tech-challenge-fase-1/
 └── docs/           # Documentação complementar
 ```
 
+## Dataset base — Telco Customer Churn (IBM)
+
+- Arquivo usado no projeto:
+  `data/raw/WA_Fn-UseC_-Telco-Customer-Churn.csv`
+- Integridade (SHA256):
+  `88be4b93fbe0cc83421af1c503794c97c342eca914c1576db7c276e61d61358a`
+- Dicionário de dados:
+  `docs/telco_customer_churn_data_dictionary.md`
+
+Fonte e referência pública:
+
+- IBM Community:
+  https://community.ibm.com/community/user/businessanalytics/blogs/monil-shah/2019/07/31/how-to-calculate-customer-churn-rate-in-spss-modeler
+- Kaggle (espelho amplamente utilizado):
+  https://www.kaggle.com/datasets/blastchar/telco-customer-churn
+
+> Observação de licença/uso: o dataset é amplamente usado para estudo e
+> demonstração. Antes de uso comercial/produção, valide os termos da fonte
+> escolhida e as políticas internas.
+
+Preparação/validação local do dataset:
+
+```bash
+uv run python src/pipelines/prepare_telco_dataset.py \
+  --source ../WA_Fn-UseC_-Telco-Customer-Churn.csv \
+  --destination data/raw/WA_Fn-UseC_-Telco-Customer-Churn.csv
+```
+
 ## Regra de execução (pipelines)
 
 - Não gerar artefatos finais (modelos treinados, bases finais, tracking de experimento) a partir de notebooks.
