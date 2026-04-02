@@ -3,11 +3,13 @@ name = "TechChallenge1ChurnTelco"
 version = "0.1.0"
 description = "Solução Completa para o Tech Challenge 1 da pós-graduação MLE da FIAP."
 readme = "README.md"
-requires-python = ">=3.13"
+requires-python = ">=3.12,<3.14"
 dependencies = [
+    "dotenv>=0.9.9",
     "fastapi>=0.135.2",
-    "pandas>=3.0.1",
+    "pandas>=2.3.3",
     "scikit-learn>=1.8.0",
+    "protobuf<5.0.0",
 ]
 authors = [
   {name = "Fernando Failla Foschiani", email = "fefailla68@gmail.com"}
@@ -15,13 +17,16 @@ authors = [
 
 [dependency-groups]
 dev = [
-    "mypy>=1.19.1",
+    "mlflow>=3.10.1",
+    "mypy>=1.20.0",
     "pre-commit>=4.5.1",
     "pytest>=9.0.2",
-    "ruff>=0.15.8",
-    "mlflow>=1.27.0",
     "torch>=2.11.0",
+    "httpx>=0.27.0",
+    "rich>=13.0.0",
+    "boto3>=1.28.0",
     "pytest-cov>=7.1.0",
+    "ruff>=0.15.8",
 ]
 
 [tool.ruff] # Configurando tools do pyprojetct. Tools sao usadas para configurar linters, formatadores e outras ferramentas de desenvolvimento.

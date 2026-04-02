@@ -186,3 +186,38 @@ Módulos e componentes previstos:
 - Roadmap e controle de execução: https://github.com/G13-MLE/tech-challenge-fase-1/issues/7
 - Boas práticas de desenvolvimento (Issue #3): https://github.com/G13-MLE/tech-challenge-fase-1/issues/3
 - Kickoff Planning (Miro): https://miro.com/app/board/uXjVGt4ginw=/
+
+## Comandos Disponíveis (Makefile)
+
+O projeto inclui um Makefile com comandos essenciais para desenvolvimento:
+
+### Setup
+
+```bash
+make setup        # Configurar ambiente (uv sync + pre-commit)
+```
+
+### Docker (MLflow)
+
+```bash
+make docker-up    # Iniciar MLflow em background (requer .env)
+make docker-down  # Parar todos os containers MLflow
+```
+
+### Desenvolvimento
+
+```bash
+make test         # Rodar testes com cobertura
+make lint         # Verificar código com ruff
+make format       # Formatar código com ruff
+```
+
+### Ajuda
+
+```bash
+make help         # Mostrar todos os comandos disponíveis
+```
+
+### Acessar
+
+- MLflow UI: http://localhost:5000
