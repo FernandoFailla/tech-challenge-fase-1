@@ -30,33 +30,30 @@ tech-challenge-fase-1/
 └── docs/           # Documentação complementar
 ```
 
-### Regra de pipelines
+## Regra de execução (pipelines)
 
+- Não gerar artefatos finais (modelos treinados, bases finais, tracking de experimento) a partir de notebooks.
 - Notebooks são para exploração.
 - Artefatos finais devem ser gerados por scripts parametrizáveis em `src/pipelines/`, executados via terminal.
 
-## Sincronização do Ambiente
-
-Para sincronizar o ambiente incluindo pacotes de desenolvimento utilizando o uv, use:
-
-```bash
-uv sync
-```
-
-Para sincronizar sem dependências de desenolvimento, útil para CI e contâiners docker, use:
-```bash
-uv sync --no-dev
-```
-- Artefatos finais (modelos, bases finais, tracking) devem ser gerados por scripts em `src/pipelines/` via terminal.
-
 ## Instalação (setup de ambiente)
 
-> 🚧 **Placeholder:** setup ainda em construção e será formalizado nas issues de configuração do projeto.
+Pré-requisitos:
+
+- Python `>=3.12,<3.14`
+- [uv](https://docs.astral.sh/uv/getting-started/installation/) instalado
+- (Opcional) Docker + Docker Compose para subir o MLflow local
 
 ```bash
-python -m venv .venv
-.venv\Scripts\activate
-pip install -U pip
+# clonar repositório
+git clone https://github.com/G13-MLE/tech-challenge-fase-1.git
+cd tech-challenge-fase-1
+
+# sincronizar dependências (runtime + dev)
+uv sync
+
+# instalar hooks de qualidade
+uv run pre-commit install
 ```
 
 ## Sincronização do Ambiente
@@ -73,22 +70,35 @@ Para sincronizar sem dependências de desenvolvimento, útil para CI e container
 uv sync --no-dev
 ```
 
+Para aplicar mudanças no `pyproject.toml` com lockfile atualizado, use:
+
+```bash
+uv lock
+uv sync
+```
+
 ## Stack e versões definidas
 
-Referência consolidada com base nas decisões já registradas nas PRs em andamento.
+Referência consolidada com base no `pyproject.toml` atual da branch.
 
-- **Python:** `>=3.13`
+- **Python:** `>=3.12,<3.14`
 - **Dependências base:**
+  - `dotenv>=0.9.9`
   - `fastapi>=0.135.2`
-  - `pandas>=2.0.0,<3.0.0`
+  - `pandas>=2.3.3`
   - `scikit-learn>=1.8.0`
-  - `mlflow>=2.0.0`
+  - `protobuf<5.0.0`
 - **Dependências de desenvolvimento:**
+  - `mlflow>=3.10.1`
   - `ruff>=0.15.8`
-  - `mypy>=1.19.1`
+  - `mypy>=1.20.0`
   - `pytest>=9.0.2`
   - `pytest-cov>=7.1.0`
   - `pre-commit>=4.5.1`
+  - `torch>=2.11.0`
+  - `httpx>=0.27.0`
+  - `rich>=13.0.0`
+  - `boto3>=1.28.0`
 
 ### Qualidade e testes (padrões iniciais)
 
@@ -105,14 +115,21 @@ Para configuração local, copie o arquivo de exemplo:
 cp .env.example .env
 ```
 
-Preencha no `.env` as variáveis essenciais para começar:
+Preencha no `.env` as variáveis essenciais para começar (baseadas no `.env.example`):
 
 ```bash
-ENVIRONMENT=development
-DEBUG=true
-API_TOKEN=seu_token_seguro_aqui
-MLFLOW_TRACKING_URI=file:./mlruns
-MLFLOW_EXPERIMENT_NAME=tech-challenge-fase-1
+MLFLOW_PORT=5000
+MLFLOW_WORKERS=2
+POSTGRES_USER=mlflow
+POSTGRES_PASSWORD=mlflow_secure_password_2024
+POSTGRES_DB=mlflow_db
+MINIO_ACCESS_KEY=minioadmin
+MINIO_SECRET_KEY=minioadmin_secret_key_2024
+MLFLOW_TRACKING_URI=http://localhost:5000
+MLFLOW_S3_ENDPOINT_URL=http://localhost:9000
+AWS_ACCESS_KEY_ID=minioadmin
+AWS_SECRET_ACCESS_KEY=minioadmin_secret_key_2024
+MLFLOW_EXPERIMENT_NAME=tech-challenge-default
 ```
 
 > 🔒 Segurança: nunca versionar o arquivo `.env` com credenciais reais.
@@ -129,14 +146,40 @@ git branch --show-current
 git status
 ```
 
-Comandos planejados (placeholder):
+## Comandos Disponíveis (Makefile)
+
+O projeto inclui um Makefile com comandos essenciais para desenvolvimento:
+
+### Setup
 
 ```bash
-make lint
-make test
+make setup        # Configurar ambiente (uv sync + pre-commit)
 ```
 
-> 🚧 **Placeholder:** os comandos `make` serão ativados quando `Makefile` e pipeline de qualidade estiverem formalizados.
+### Docker (MLflow)
+
+```bash
+make docker-up    # Iniciar MLflow em background (requer .env)
+make docker-down  # Parar todos os containers MLflow
+```
+
+### Desenvolvimento
+
+```bash
+make test         # Rodar testes com cobertura
+make lint         # Verificar código com ruff
+make format       # Formatar código com ruff
+```
+
+### Ajuda
+
+```bash
+make help         # Mostrar todos os comandos disponíveis
+```
+
+### Acessar
+
+- MLflow UI: http://localhost:5000
 
 ## Roadmap / Próximos passos
 
@@ -186,38 +229,3 @@ Módulos e componentes previstos:
 - Roadmap e controle de execução: https://github.com/G13-MLE/tech-challenge-fase-1/issues/7
 - Boas práticas de desenvolvimento (Issue #3): https://github.com/G13-MLE/tech-challenge-fase-1/issues/3
 - Kickoff Planning (Miro): https://miro.com/app/board/uXjVGt4ginw=/
-
-## Comandos Disponíveis (Makefile)
-
-O projeto inclui um Makefile com comandos essenciais para desenvolvimento:
-
-### Setup
-
-```bash
-make setup        # Configurar ambiente (uv sync + pre-commit)
-```
-
-### Docker (MLflow)
-
-```bash
-make docker-up    # Iniciar MLflow em background (requer .env)
-make docker-down  # Parar todos os containers MLflow
-```
-
-### Desenvolvimento
-
-```bash
-make test         # Rodar testes com cobertura
-make lint         # Verificar código com ruff
-make format       # Formatar código com ruff
-```
-
-### Ajuda
-
-```bash
-make help         # Mostrar todos os comandos disponíveis
-```
-
-### Acessar
-
-- MLflow UI: http://localhost:5000
