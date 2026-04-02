@@ -1,25 +1,33 @@
-# tech-challenge-fase-1
+# Tech Challenge — Fase 1
 
-Estrutura inicial de pastas do projeto.
+Pipeline end-to-end de ML para previsão de churn em telecomunicações — MLP com PyTorch, baselines Scikit-Learn, rastreamento com MLflow e API de inferência com FastAPI. Tech Challenge Fase 1 · PÓS TECH FIAP.
 
-## Estrutura
+## Contexto do problema
+
+Em telecom, churn representa o cancelamento de clientes. Antecipar esse comportamento ajuda o negócio a:
+
+- reduzir perda de receita;
+- priorizar ações de retenção;
+- melhorar a experiência do cliente com decisões orientadas por dados.
+
+## Estrutura do repositório
 
 ```text
 tech-challenge-fase-1/
 ├── src/
-│   ├── data/
-│   ├── features/
-│   ├── eda/
-│   ├── training/
-│   ├── inference/
-│   ├── schemas/
-│   ├── api/
-│   └── pipelines/
-├── data/
-├── models/
-├── tests/
-├── notebooks/
-└── docs/
+│   ├── data/       # Importação e parse de dados
+│   ├── features/   # Limpeza, feature engineering e seleção
+│   ├── eda/        # Funções auxiliares para exploração
+│   ├── training/   # Split, treino e tuning
+│   ├── inference/  # Predição desacoplada da camada web
+│   ├── schemas/    # Schemas de validação (Pandera/Pydantic)
+│   ├── api/        # Camada FastAPI
+│   └── pipelines/  # Scripts de execução/orquestração
+├── data/           # Dados do projeto
+├── models/         # Artefatos de modelo
+├── tests/          # Testes automatizados
+├── notebooks/      # Exploração e análises
+└── docs/           # Documentação complementar
 ```
 
 ## Regra de execução (pipelines)
@@ -28,17 +36,114 @@ tech-challenge-fase-1/
 - Notebooks são para exploração.
 - Artefatos finais devem ser gerados por scripts parametrizáveis em `src/pipelines/`, executados via terminal.
 
+## Instalação (setup de ambiente)
+
+Pré-requisitos:
+
+- Python `>=3.12,<3.14`
+- [uv](https://docs.astral.sh/uv/getting-started/installation/) instalado
+- (Opcional) Docker + Docker Compose para subir o MLflow local
+
+```bash
+# clonar repositório
+git clone https://github.com/G13-MLE/tech-challenge-fase-1.git
+cd tech-challenge-fase-1
+
+# sincronizar dependências (runtime + dev)
+uv sync
+
+# instalar hooks de qualidade
+uv run pre-commit install
+```
+
 ## Sincronização do Ambiente
 
-Para sincronizar o ambiente incluindo pacotes de desenolvimento utilizando o uv, use:
+Para sincronizar o ambiente incluindo pacotes de desenvolvimento utilizando o uv, use:
 
 ```bash
 uv sync
 ```
 
-Para sincronizar sem dependências de desenolvimento, útil para CI e contâiners docker, use:
+Para sincronizar sem dependências de desenvolvimento, útil para CI e containers Docker, use:
+
 ```bash
 uv sync --no-dev
+```
+
+Para aplicar mudanças no `pyproject.toml` com lockfile atualizado, use:
+
+```bash
+uv lock
+uv sync
+```
+
+## Stack e versões definidas
+
+Referência consolidada com base no `pyproject.toml` atual da branch.
+
+- **Python:** `>=3.12,<3.14`
+- **Dependências base:**
+  - `dotenv>=0.9.9`
+  - `fastapi>=0.135.2`
+  - `pandas>=2.3.3`
+  - `scikit-learn>=1.8.0`
+  - `protobuf<5.0.0`
+- **Dependências de desenvolvimento:**
+  - `mlflow>=3.10.1`
+  - `ruff>=0.15.8`
+  - `mypy>=1.20.0`
+  - `pytest>=9.0.2`
+  - `pytest-cov>=7.1.0`
+  - `pre-commit>=4.5.1`
+  - `torch>=2.11.0`
+  - `httpx>=0.27.0`
+  - `rich>=13.0.0`
+  - `boto3>=1.28.0`
+
+### Qualidade e testes (padrões iniciais)
+
+- lint e formatação com **Ruff**;
+- tipagem estática com **MyPy**;
+- testes com **Pytest**;
+- cobertura mínima alvo em `src`: **80%**.
+
+## Configuração de Variáveis de Ambiente
+
+Para configuração local, copie o arquivo de exemplo:
+
+```bash
+cp .env.example .env
+```
+
+Preencha no `.env` as variáveis essenciais para começar (baseadas no `.env.example`):
+
+```bash
+MLFLOW_PORT=5000
+MLFLOW_WORKERS=2
+POSTGRES_USER=mlflow
+POSTGRES_PASSWORD=mlflow_secure_password_2024
+POSTGRES_DB=mlflow_db
+MINIO_ACCESS_KEY=minioadmin
+MINIO_SECRET_KEY=minioadmin_secret_key_2024
+MLFLOW_TRACKING_URI=http://localhost:5000
+MLFLOW_S3_ENDPOINT_URL=http://localhost:9000
+AWS_ACCESS_KEY_ID=minioadmin
+AWS_SECRET_ACCESS_KEY=minioadmin_secret_key_2024
+MLFLOW_EXPERIMENT_NAME=tech-challenge-default
+```
+
+> 🔒 Segurança: nunca versionar o arquivo `.env` com credenciais reais.
+
+## Comandos básicos
+
+Comandos disponíveis no momento (validação local):
+
+```bash
+# verificar branch atual
+git branch --show-current
+
+# ver mudanças locais
+git status
 ```
 
 ## Comandos Disponíveis (Makefile)
@@ -75,3 +180,52 @@ make help         # Mostrar todos os comandos disponíveis
 ### Acessar
 
 - MLflow UI: http://localhost:5000
+
+## Roadmap / Próximos passos
+
+Resumo conciso do cronograma de execução (issue de controle):
+
+- **Etapa 0 (26/03 → 06/04):** setup de repositório e base técnica;
+- **Etapa 1 (07/04 → 20/04):** entendimento dos dados (EDA) e baselines;
+- **Etapa 2 (21/04 → 30/04):** modelagem com MLP (PyTorch);
+- **Etapa 3 (24/04 → 04/05):** engenharia (API, testes, integração);
+- **Etapa 4 (01/05 → 05/05):** documentação final e entrega.
+
+Marcos críticos:
+
+- **04/05/2026:** gravação do vídeo STAR;
+- **05/05/2026:** entrega final.
+
+## Boas práticas e módulos previstos (baseado na Issue #3)
+
+> ✅ **Status:** esta seção descreve direcionadores e componentes **previstos** para evolução do projeto.
+
+Boas práticas de engenharia previstas:
+
+- TDD desde o início dos módulos críticos;
+- padronização de lint/format (ruff);
+- tipagem estática gradual (mypy em CI + pyright no IDE);
+- organização por pipeline reproduzível (ambiente declarativo e containerização);
+- documentação contínua de decisões técnicas e do fluxo de execução.
+
+Módulos e componentes previstos:
+
+- **Qualidade e automação:** pre-commit, testes automatizados e cobertura;
+- **ML pipeline:** `sklearn.Pipeline`, rastreamento com MLflow e serialização de artefatos;
+- **API e contratos:** FastAPI + Pydantic v2 para inferência e validação de entradas;
+- **Operação:** Docker multi-stage, variáveis de ambiente e CI com GitHub Actions;
+- **Suporte ao ciclo de dados:** uso opcional de DVC e organização de notebooks (com possibilidade de jupytext).
+
+## Autores
+
+- Eduardo Pereira (@eduardonunesp)
+- Bruno Fructuoso (@BrunoFructuoso)
+- Fernando Failla Foschiani (@FernandoFailla)
+- Rafael (@gabipasse)
+- Ygor Martinelli (@ygormartinelli)
+
+## Links úteis
+
+- Roadmap e controle de execução: https://github.com/G13-MLE/tech-challenge-fase-1/issues/7
+- Boas práticas de desenvolvimento (Issue #3): https://github.com/G13-MLE/tech-challenge-fase-1/issues/3
+- Kickoff Planning (Miro): https://miro.com/app/board/uXjVGt4ginw=/
