@@ -40,3 +40,38 @@ Para sincronizar sem dependências de desenolvimento, útil para CI e contâiner
 ```bash
 uv sync --no-dev
 ```
+
+## Comandos Disponíveis (Makefile)
+
+O projeto inclui um Makefile com comandos essenciais para desenvolvimento:
+
+### Setup
+
+```bash
+make setup        # Configurar ambiente (uv sync + pre-commit)
+```
+
+### Docker (MLflow)
+
+```bash
+make docker-up    # Iniciar MLflow em background (requer .env)
+make docker-down  # Parar todos os containers MLflow
+```
+
+### Desenvolvimento
+
+```bash
+make test         # Rodar testes com cobertura
+make lint         # Verificar código com ruff
+make format       # Formatar código com ruff
+```
+
+### Ajuda
+
+```bash
+make help         # Mostrar todos os comandos disponíveis
+```
+
+### Acessar
+
+- MLflow UI: http://localhost:5000
