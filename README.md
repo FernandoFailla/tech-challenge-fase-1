@@ -50,12 +50,10 @@ Fonte e referência pública:
 > demonstração. Antes de uso comercial/produção, valide os termos da fonte
 > escolhida e as políticas internas.
 
-Preparação/validação local do dataset:
+Validação local do dataset:
 
 ```bash
-uv run python src/pipelines/prepare_telco_dataset.py \
-  --source ../WA_Fn-UseC_-Telco-Customer-Churn.csv \
-  --destination data/raw/WA_Fn-UseC_-Telco-Customer-Churn.csv
+python src/pipelines/prepare_telco_dataset.py
 ```
 
 ## Regra de execução (pipelines)
