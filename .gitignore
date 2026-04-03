@@ -42,13 +42,6 @@ Thumbs.db
 .ipynb_checkpoints/
 *.ipynb_checkpoints/
 
-# Data
-data/raw/*
-data/processed/*
-!data/raw/.gitkeep
-!data/raw/WA_Fn-UseC_-Telco-Customer-Churn.csv
-!data/processed/.gitkeep
-
 # Logs
 *.log
 logs/
