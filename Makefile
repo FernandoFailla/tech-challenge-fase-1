@@ -29,8 +29,26 @@ help:
 # Setup inicial
 setup:
 	@echo "Configurando ambiente..."
+	@if [ ! -f .env ]; then \
+		echo "Criando .env a partir de .env.example..."; \
+		cp .env.example .env; \
+	fi
 	uv sync
 	uv run pre-commit install
+	@echo "Configurando DVC remote..."
+	@URL=$$(grep -E '^DVC_ONEDRIVE_REMOTE_URL=' .env | cut -d '=' -f2); \
+	printf "Caminho atual do DVC remoto no .env: [$$URL]\nDigite um novo caminho ou pressione Enter para manter: "; \
+	read user_input </dev/tty; \
+	if [ -n "$$user_input" ]; then \
+		sed -i "s#^DVC_ONEDRIVE_REMOTE_URL=.*#DVC_ONEDRIVE_REMOTE_URL=$$user_input#" .env; \
+		URL="$$user_input"; \
+	fi; \
+	if [ -n "$$URL" ]; then \
+		uv run dvc remote modify onedrive_remote url "$$URL"; \
+		echo "✅ DVC remote configurado para: $$URL"; \
+	else \
+		echo "⚠️ Aviso: URL remota do DVC nao definida."; \
+	fi
 	@echo "Setup concluido!"
 
 # Testes
