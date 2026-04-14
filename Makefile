@@ -39,10 +39,14 @@ setup:
 	uv tool install dvc
 	@echo "Configurando DVC remote..."
 	@URL=$$(grep -E '^DVC_ONEDRIVE_REMOTE_URL=' .env | cut -d '=' -f2); \
-	printf "Caminho atual do DVC remoto no .env: [$$URL]\nDigite um novo caminho ou pressione Enter para manter: "; \
-	read user_input </dev/tty; \
+	if [ -t 0 ]; then \
+		printf "Caminho atual do DVC remoto no .env: [$$URL]\nDigite um novo caminho ou pressione Enter para manter: "; \
+		read user_input </dev/tty; \
+	else \
+		user_input=""; \
+	fi; \
 	if [ -n "$$user_input" ]; then \
-		sed -i "s#^DVC_ONEDRIVE_REMOTE_URL=.*#DVC_ONEDRIVE_REMOTE_URL=$$user_input#" .env; \
+		awk -v val="$$user_input" '{if ($$0 ~ /^DVC_ONEDRIVE_REMOTE_URL=/) print "DVC_ONEDRIVE_REMOTE_URL=" val; else print $$0}' .env > .env.tmp && mv .env.tmp .env; \
 		URL="$$user_input"; \
 	fi; \
 	if [ -n "$$URL" ]; then \

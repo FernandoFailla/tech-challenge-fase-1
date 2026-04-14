@@ -53,7 +53,7 @@ Fonte e referência pública:
 Validação local do dataset:
 
 ```bash
-python src/pipelines/prepare_telco_dataset.py
+python src/data/prepare_telco_dataset.py
 ```
 
 ## Regra de execução (pipelines)

@@ -45,6 +45,7 @@ exclude =[
 ]
 
 [tool.pytest.ini_options]
+pythonpath = ["."]
 testpaths = ["tests"] # Configurando o pytest para procurar testes na pasta tests.
 
 markers = [
@@ -54,3 +55,13 @@ markers = [
 
 # Configuracao de coverage para falhar se coverage estiver abaixo de 80% em src
 addopts = "-v --cov=src --cov-report=term-missing --cov-fail-under=80"
+
+[[tool.mypy.overrides]]
+module = [
+    "mlflow.*",
+    "dotenv.*",
+    "rich.*",
+    "sklearn.*",
+    "numpy.*"
+]
+ignore_missing_imports = true

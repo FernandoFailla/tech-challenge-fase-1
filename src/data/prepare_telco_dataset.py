@@ -13,6 +13,6 @@ def load_telco_data(
         ) from e
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     df = load_telco_data()
     print(df.head())

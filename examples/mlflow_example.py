@@ -171,8 +171,12 @@ class MLflowConfig:
         load_dotenv()
 
         return cls(
-            tracking_uri=os.getenv("MLFLOW_TRACKING_URI", "http://localhost:5000"),
-            experiment_name=os.getenv("MLFLOW_EXPERIMENT_NAME", "tech-challenge-demo"),
+            tracking_uri=os.getenv(
+                "MLFLOW_TRACKING_URI", "http://localhost:5000"
+            ),
+            experiment_name=os.getenv(
+                "MLFLOW_EXPERIMENT_NAME", "tech-challenge-demo"
+            ),
             s3_endpoint=os.getenv("MLFLOW_S3_ENDPOINT_URL"),
             aws_access_key=os.getenv("AWS_ACCESS_KEY_ID", "minioadmin"),
             aws_secret_key=os.getenv("AWS_SECRET_ACCESS_KEY", "minioadmin"),
@@ -187,7 +191,9 @@ class MLflowConfig:
             os.environ["MLFLOW_S3_ENDPOINT_URL"] = self.s3_endpoint
             os.environ["AWS_ACCESS_KEY_ID"] = self.aws_access_key
             os.environ["AWS_SECRET_ACCESS_KEY"] = self.aws_secret_key
-            console.print("[green]✅ Configurado S3 endpoint para artifacts[/green]")
+            console.print(
+                "[green]✅ Configurado S3 endpoint para artifacts[/green]"
+            )
 
 
 class ExperimentRunner:
@@ -222,7 +228,9 @@ class ExperimentRunner:
 
         with mlflow.start_run(run_name=run_name):
             # Instanciar modelo
-            model: BaseEstimator = model_config.model_class(**model_config.params)
+            model: BaseEstimator = model_config.model_class(
+                **model_config.params
+            )
 
             # Log de parâmetros
             mlflow.log_param("model_name", model_config.name.value)
@@ -254,7 +262,9 @@ class ExperimentRunner:
             )
             self.results.append(result)
 
-            console.print(f"   [green]✅ Accuracy:[/green] {metrics['accuracy']:.4f}")
+            console.print(
+                f"   [green]✅ Accuracy:[/green] {metrics['accuracy']:.4f}"
+            )
             console.print(f"   [dim]Run ID: {run_id}[/dim]")
 
             return result
@@ -303,13 +313,16 @@ def verify_mlflow_connection(config: MLflowConfig) -> bool:
     try:
         client = mlflow.tracking.MlflowClient()
         experiments = client.search_experiments()
-        console.print(f"[green]✅ Conexão com MLflow estabelecida![/green]")
-        console.print(f"   [dim]Experiments disponíveis: {len(experiments)}[/dim]")
+        console.print("[green]✅ Conexão com MLflow estabelecida![/green]")
+        console.print(
+            f"   [dim]Experiments disponíveis: {len(experiments)}[/dim]"
+        )
         return True
     except Exception as e:  # noqa: BLE001
         console.print(f"[red]❌ Erro ao conectar ao MLflow: {e}[/red]")
         console.print(
-            "\n[yellow]💡 Certifique-se de que o servidor " "está rodando:[/yellow]"
+            "\n[yellow]💡 Certifique-se de que o servidor "
+            "está rodando:[/yellow]"
         )
         console.print("   ./mlflow.sh start")
         return False
@@ -326,7 +339,9 @@ def main() -> int:
 
     # Configuração
     config = MLflowConfig.from_env()
-    console.print(f"\n[dim]🔌 Conectando ao MLflow:[/dim] {config.tracking_uri}")
+    console.print(
+        f"\n[dim]🔌 Conectando ao MLflow:[/dim] {config.tracking_uri}"
+    )
 
     config.setup()
     console.print(f"[dim]📊 Experimento:[/dim] {config.experiment_name}\n")
