@@ -1,3 +1,11 @@
+# Data
+data/raw/*
+!data/raw/*.dvc
+!data/raw/.gitignore
+data/processed/*
+!data/processed/*.dvc
+!data/processed/.gitignore
+
 # MLflow
 mlruns/
 mlartifacts/
