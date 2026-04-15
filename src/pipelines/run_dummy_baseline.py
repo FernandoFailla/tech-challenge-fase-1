@@ -5,7 +5,6 @@ Fase 2: treino, métricas e registro no MLflow.
 
 from __future__ import annotations
 
-import os
 import sys
 from dataclasses import dataclass
 from pathlib import Path
@@ -13,20 +12,22 @@ from typing import Any
 
 import mlflow
 import pandas as pd
-import yaml
-from mlflow.data import from_pandas
 from sklearn.dummy import DummyClassifier
-from sklearn.metrics import (
-    accuracy_score,
-    average_precision_score,
-    f1_score,
-    precision_score,
-    recall_score,
-    roc_auc_score,
-)
-from sklearn.model_selection import train_test_split
 
 from src.data.prepare_telco_dataset import load_telco_data
+from src.data.splitting import split_train_test_stratified
+from src.data.validation import (
+    validate_binary_target,
+    validate_required_columns,
+)
+from src.data.versioning import get_dataset_version_from_dvc
+from src.training.metrics import compute_binary_classification_metrics
+from src.training.mlflow_tracking import (
+    MLflowConfig,
+    TrainTestData,
+    build_mlflow_inputs,
+    setup_mlflow,
+)
 
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8", errors="ignore")
@@ -35,9 +36,6 @@ RANDOM_SEED = 42
 TARGET_COLUMN = "Churn"
 STRATEGIES = ("most_frequent", "stratified", "uniform")
 POSITIVE_LABEL = "Yes"
-MIN_TARGET_CLASSES = 2
-DATASET_SOURCE_PATH = "data/raw/WA_Fn-UseC_-Telco-Customer-Churn.csv"
-DVC_METADATA_PATH = "data/raw/WA_Fn-UseC_-Telco-Customer-Churn.csv.dvc"
 
 
 @dataclass(frozen=True)
@@ -49,114 +47,12 @@ class PipelineConfig:
     target_column: str = TARGET_COLUMN
 
 
-@dataclass(frozen=True)
-class MLflowConfig:
-    """Configuração de tracking do MLflow."""
-
-    tracking_uri: str = "http://localhost:5000"
-    experiment_name: str = "tech-challenge-dummy-baseline"
-
-
 TrainData = tuple[
     pd.DataFrame,
     pd.DataFrame,
     pd.Series,
     pd.Series,
 ]
-
-
-def load_dataframe() -> pd.DataFrame:
-    """Carrega o dataset base de churn."""
-    return load_telco_data()
-
-
-def validate_required_columns(df: pd.DataFrame, target_column: str) -> None:
-    """Valida se a coluna alvo existe no dataset."""
-    if df.empty:
-        raise ValueError("Dataset vazio. Não é possível treinar baseline.")
-
-    if target_column not in df.columns:
-        msg = f"Coluna alvo ausente no dataset: '{target_column}'."
-        raise ValueError(msg)
-
-
-def validate_target_values(y: pd.Series) -> None:
-    """Valida presença de classes esperadas na variável alvo."""
-    unique_values = set(y.astype(str).unique().tolist())
-    if POSITIVE_LABEL not in unique_values:
-        msg = (
-            "Classe positiva 'Yes' não encontrada na coluna alvo. "
-            "Verifique o mapeamento de churn."
-        )
-        raise ValueError(msg)
-
-    if len(unique_values) < MIN_TARGET_CLASSES:
-        raise ValueError("A coluna alvo precisa ter pelo menos duas classes.")
-
-
-def split_data(
-    df: pd.DataFrame,
-    config: PipelineConfig,
-) -> tuple[pd.DataFrame, pd.DataFrame, pd.Series, pd.Series]:
-    """Separa treino e teste com seed fixa para reprodutibilidade."""
-    X = df.drop(columns=[config.target_column])
-    y = df[config.target_column].astype(str)
-
-    X_train, X_test, y_train, y_test = train_test_split(
-        X,
-        y,
-        test_size=config.test_size,
-        random_state=config.random_seed,
-        stratify=y,
-    )
-    return X_train, X_test, y_train, y_test
-
-
-def compute_metrics(
-    y_true: pd.Series,
-    y_pred: pd.Series,
-    y_proba_positive: pd.Series,
-) -> dict[str, float]:
-    """Calcula métricas de classificação binária para churn."""
-    y_true_bin = (y_true == POSITIVE_LABEL).astype(int)
-    y_pred_bin = (y_pred == POSITIVE_LABEL).astype(int)
-
-    return {
-        "accuracy": accuracy_score(y_true_bin, y_pred_bin),
-        "precision": precision_score(y_true_bin, y_pred_bin, zero_division=0),
-        "recall": recall_score(y_true_bin, y_pred_bin, zero_division=0),
-        "f1_score": f1_score(y_true_bin, y_pred_bin, zero_division=0),
-        "roc_auc": roc_auc_score(y_true_bin, y_proba_positive),
-        "pr_auc": average_precision_score(y_true_bin, y_proba_positive),
-    }
-
-
-def get_dataset_version(dvc_path: str = DVC_METADATA_PATH) -> str:
-    """Lê versão do dataset a partir do arquivo .dvc (md5)."""
-    with Path(dvc_path).open(encoding="utf-8") as dvc_file:
-        dvc_metadata = yaml.safe_load(dvc_file)
-
-    outs = dvc_metadata.get("outs", [])
-    if not outs:
-        raise ValueError("Arquivo .dvc inválido: seção 'outs' ausente.")
-
-    md5_value = outs[0].get("md5")
-    if not md5_value:
-        raise ValueError("Arquivo .dvc inválido: campo 'md5' ausente.")
-
-    return str(md5_value)
-
-
-def setup_mlflow(config: MLflowConfig) -> None:
-    """Configura tracking URI e experimento no MLflow."""
-    mlflow.set_tracking_uri(config.tracking_uri)
-    mlflow.set_experiment(config.experiment_name)
-
-    tracking_uri = config.tracking_uri
-    if "localhost:5000" in tracking_uri:
-        os.environ.setdefault("MLFLOW_S3_ENDPOINT_URL", "http://localhost:9000")
-        os.environ.setdefault("AWS_ACCESS_KEY_ID", "minioadmin")
-        os.environ.setdefault("AWS_SECRET_ACCESS_KEY", "minioadmin")
 
 
 def run_all_strategies(  # noqa: PLR0914, PLR0915
@@ -170,25 +66,17 @@ def run_all_strategies(  # noqa: PLR0914, PLR0915
     """
     setup_mlflow(mlflow_config)
     X_train, X_test, y_train, y_test = train_data
-    dataset_version = get_dataset_version()
-    dataset_version_short = dataset_version[:8]
-
-    train_dataset = X_train.copy()
-    train_dataset[pipeline_config.target_column] = y_train
-    test_dataset = X_test.copy()
-    test_dataset[pipeline_config.target_column] = y_test
-
-    train_input = from_pandas(
-        train_dataset,
-        source=DATASET_SOURCE_PATH,
-        name=f"telco_train_split_v{dataset_version_short}",
-        digest=f"train-{dataset_version_short}",
+    dataset_version = get_dataset_version_from_dvc()
+    train_test_data = TrainTestData(
+        X_train=X_train,
+        X_test=X_test,
+        y_train=y_train,
+        y_test=y_test,
     )
-    test_input = from_pandas(
-        test_dataset,
-        source=DATASET_SOURCE_PATH,
-        name=f"telco_test_split_v{dataset_version_short}",
-        digest=f"test-{dataset_version_short}",
+    train_input, test_input = build_mlflow_inputs(
+        train_test_data,
+        pipeline_config.target_column,
+        dataset_version,
     )
 
     results: list[dict[str, Any]] = []
@@ -211,7 +99,12 @@ def run_all_strategies(  # noqa: PLR0914, PLR0915
             index=y_test.index,
         )
 
-        metrics = compute_metrics(y_test, y_pred, y_proba_positive)
+        metrics = compute_binary_classification_metrics(
+            y_test,
+            y_pred,
+            y_proba_positive,
+            POSITIVE_LABEL,
+        )
 
         run_name = f"dummy_{strategy}"
         with mlflow.start_run(run_name=run_name):
@@ -278,11 +171,16 @@ def main() -> int:
     config = PipelineConfig()
     mlflow_config = MLflowConfig()
 
-    df = load_dataframe()
+    df = load_telco_data()
     validate_required_columns(df, config.target_column)
-    validate_target_values(df[config.target_column])
+    validate_binary_target(df[config.target_column], POSITIVE_LABEL)
 
-    X_train, X_test, y_train, y_test = split_data(df, config)
+    X_train, X_test, y_train, y_test = split_train_test_stratified(
+        df,
+        config.target_column,
+        config.test_size,
+        config.random_seed,
+    )
     train_data = (X_train, X_test, y_train, y_test)
     results_df = run_all_strategies(train_data, config, mlflow_config)
 

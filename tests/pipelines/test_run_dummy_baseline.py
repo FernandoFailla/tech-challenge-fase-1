@@ -6,17 +6,21 @@ from typing import Self
 import pandas as pd
 import pytest
 
-from src.pipelines.run_dummy_baseline import (
-    POSITIVE_LABEL,
-    MLflowConfig,
-    PipelineConfig,
-    compute_metrics,
-    main,
-    run_all_strategies,
-    setup_mlflow,
-    split_data,
+from src.data.splitting import (
+    split_train_test_stratified,
+)
+from src.data.validation import (
     validate_required_columns,
 )
+from src.pipelines.run_dummy_baseline import (
+    PipelineConfig,
+    main,
+    run_all_strategies,
+)
+from src.training.metrics import compute_binary_classification_metrics
+from src.training.mlflow_tracking import MLflowConfig, setup_mlflow
+
+POSITIVE_LABEL = "Yes"
 
 EXPECTED_SIZE = 3
 
@@ -37,7 +41,12 @@ def test_split_data_returns_expected_sizes() -> None:
     df = make_dummy_df()
     config = PipelineConfig(test_size=0.5, random_seed=42)
 
-    X_train, X_test, y_train, y_test = split_data(df, config)
+    X_train, X_test, y_train, y_test = split_train_test_stratified(
+        df,
+        config.target_column,
+        config.test_size,
+        config.random_seed,
+    )
 
     assert len(X_train) == EXPECTED_SIZE
     assert len(X_test) == EXPECTED_SIZE
@@ -51,7 +60,12 @@ def test_compute_metrics_returns_all_expected_keys() -> None:
     y_pred = pd.Series([POSITIVE_LABEL, "No", "No", "No"])
     y_proba = pd.Series([0.8, 0.1, 0.3, 0.2])
 
-    metrics = compute_metrics(y_true, y_pred, y_proba)
+    metrics = compute_binary_classification_metrics(
+        y_true,
+        y_pred,
+        y_proba,
+        POSITIVE_LABEL,
+    )
 
     assert set(metrics.keys()) == {
         "accuracy",
@@ -67,11 +81,20 @@ def test_run_all_strategies_returns_three_rows(monkeypatch: object) -> None:
     """Pipeline deve produzir 3 resultados, um por estratégia dummy."""
     df = make_dummy_df()
     config = PipelineConfig(test_size=0.5, random_seed=42)
-    X_train, X_test, y_train, y_test = split_data(df, config)
+    X_train, X_test, y_train, y_test = split_train_test_stratified(
+        df,
+        config.target_column,
+        config.test_size,
+        config.random_seed,
+    )
 
     monkeypatch.setattr(
         "src.pipelines.run_dummy_baseline.setup_mlflow",
         lambda _: None,
+    )
+    monkeypatch.setattr(
+        "src.pipelines.run_dummy_baseline.build_mlflow_inputs",
+        lambda *args, **kwargs: (object(), object()),
     )
 
     class _DummyRun:
@@ -105,11 +128,6 @@ def test_run_all_strategies_returns_three_rows(monkeypatch: object) -> None:
         "src.pipelines.run_dummy_baseline.mlflow.log_artifact",
         lambda *args, **kwargs: None,
     )
-    monkeypatch.setattr(
-        "src.pipelines.run_dummy_baseline.from_pandas",
-        lambda *args, **kwargs: object(),
-    )
-
     results_df = run_all_strategies(
         (X_train, X_test, y_train, y_test),
         config,
@@ -139,11 +157,11 @@ def test_setup_mlflow_sets_local_env(monkeypatch: object) -> None:
     monkeypatch.delenv("AWS_SECRET_ACCESS_KEY", raising=False)
 
     monkeypatch.setattr(
-        "src.pipelines.run_dummy_baseline.mlflow.set_tracking_uri",
+        "src.training.mlflow_tracking.mlflow.set_tracking_uri",
         lambda _: None,
     )
     monkeypatch.setattr(
-        "src.pipelines.run_dummy_baseline.mlflow.set_experiment",
+        "src.training.mlflow_tracking.mlflow.set_experiment",
         lambda _: None,
     )
 
@@ -160,7 +178,7 @@ def test_main_returns_zero_with_monkeypatched_flow(
     """main deve concluir com sucesso quando dependências são mockadas."""
     df = make_dummy_df()
     monkeypatch.setattr(
-        "src.pipelines.run_dummy_baseline.load_dataframe",
+        "src.pipelines.run_dummy_baseline.load_telco_data",
         lambda: df,
     )
     monkeypatch.setattr(
