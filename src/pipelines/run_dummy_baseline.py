@@ -13,6 +13,7 @@ from typing import Any
 
 import mlflow
 import pandas as pd
+import yaml
 from mlflow.data import from_pandas
 from sklearn.dummy import DummyClassifier
 from sklearn.metrics import (
@@ -35,6 +36,8 @@ TARGET_COLUMN = "Churn"
 STRATEGIES = ("most_frequent", "stratified", "uniform")
 POSITIVE_LABEL = "Yes"
 MIN_TARGET_CLASSES = 2
+DATASET_SOURCE_PATH = "data/raw/WA_Fn-UseC_-Telco-Customer-Churn.csv"
+DVC_METADATA_PATH = "data/raw/WA_Fn-UseC_-Telco-Customer-Churn.csv.dvc"
 
 
 @dataclass(frozen=True)
@@ -128,6 +131,22 @@ def compute_metrics(
     }
 
 
+def get_dataset_version(dvc_path: str = DVC_METADATA_PATH) -> str:
+    """Lê versão do dataset a partir do arquivo .dvc (md5)."""
+    with Path(dvc_path).open(encoding="utf-8") as dvc_file:
+        dvc_metadata = yaml.safe_load(dvc_file)
+
+    outs = dvc_metadata.get("outs", [])
+    if not outs:
+        raise ValueError("Arquivo .dvc inválido: seção 'outs' ausente.")
+
+    md5_value = outs[0].get("md5")
+    if not md5_value:
+        raise ValueError("Arquivo .dvc inválido: campo 'md5' ausente.")
+
+    return str(md5_value)
+
+
 def setup_mlflow(config: MLflowConfig) -> None:
     """Configura tracking URI e experimento no MLflow."""
     mlflow.set_tracking_uri(config.tracking_uri)
@@ -151,6 +170,9 @@ def run_all_strategies(  # noqa: PLR0914, PLR0915
     """
     setup_mlflow(mlflow_config)
     X_train, X_test, y_train, y_test = train_data
+    dataset_version = get_dataset_version()
+    dataset_version_short = dataset_version[:8]
+
     train_dataset = X_train.copy()
     train_dataset[pipeline_config.target_column] = y_train
     test_dataset = X_test.copy()
@@ -158,13 +180,15 @@ def run_all_strategies(  # noqa: PLR0914, PLR0915
 
     train_input = from_pandas(
         train_dataset,
-        source="data/raw/WA_Fn-UseC_-Telco-Customer-Churn.csv",
-        name="telco_train_split",
+        source=DATASET_SOURCE_PATH,
+        name=f"telco_train_split_v{dataset_version_short}",
+        digest=f"train-{dataset_version_short}",
     )
     test_input = from_pandas(
         test_dataset,
-        source="data/raw/WA_Fn-UseC_-Telco-Customer-Churn.csv",
-        name="telco_test_split",
+        source=DATASET_SOURCE_PATH,
+        name=f"telco_test_split_v{dataset_version_short}",
+        digest=f"test-{dataset_version_short}",
     )
 
     results: list[dict[str, Any]] = []
@@ -199,6 +223,7 @@ def run_all_strategies(  # noqa: PLR0914, PLR0915
             mlflow.log_param("random_seed", pipeline_config.random_seed)
             mlflow.log_param("test_size", pipeline_config.test_size)
             mlflow.log_param("target_column", pipeline_config.target_column)
+            mlflow.log_param("dataset_version", dataset_version)
 
             mlflow.set_tag("issue", "20")
             mlflow.set_tag("baseline_family", "dummy")
@@ -234,6 +259,7 @@ def run_all_strategies(  # noqa: PLR0914, PLR0915
         mlflow.log_param("random_seed", pipeline_config.random_seed)
         mlflow.log_param("strategies", ",".join(STRATEGIES))
         mlflow.log_param("best_strategy", str(best_row["strategy"]))
+        mlflow.log_param("dataset_version", dataset_version)
 
         mlflow.log_metric("best_f1_score", float(best_row["f1_score"]))
         mlflow.log_metric("best_accuracy", float(best_row["accuracy"]))
