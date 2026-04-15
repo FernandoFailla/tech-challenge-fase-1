@@ -189,6 +189,42 @@ make docker-up    # Iniciar MLflow em background (requer .env)
 make docker-down  # Parar todos os containers MLflow
 ```
 
+### Treinamento do Modelo MLP
+
+Para treinar o modelo MLP (Multi-Layer Perceptron) com PyTorch:
+
+**Pré-requisitos:**
+- Arquivo `.env` configurado (veja seção "Configuração de Variáveis de Ambiente")
+- MLflow rodando localmente (`make docker-up`)
+- Dataset Telco no caminho `data/raw/WA_Fn-UseC_-Telco-Customer-Churn.csv`
+
+**Executar treino:**
+
+```bash
+# Opção 1: Usando o Makefile (recomendado)
+make train
+
+# Opção 2: Executando diretamente com uv
+uv run python -m src.pipelines.train
+
+# Opção 3: Com argumentos customizados
+uv run python -m src.pipelines.train \
+    --input data/raw/WA_Fn-UseC_-Telco-Customer-Churn.csv \
+    --experiment-name churn-mlp-v1
+```
+
+**O que o treino faz:**
+1. Carrega e pré-processa os dados (one-hot encoding, padronização)
+2. Divide em treino/teste (80/20) com estratificação
+3. Treina MLP com arquitetura configurável (padrão: 128→64→32 neurônios)
+4. Aplica early stopping e learning rate scheduling
+5. Registra métricas e modelo no MLflow
+6. Salva o melhor modelo em `models/churn_mlp_best.pt`
+
+**Métricas geradas:**
+- Acurácia, Precisão, Recall, F1-Score, AUC-ROC
+- Visualização no MLflow UI (http://localhost:5000)
+
 ### Desenvolvimento
 
 ```bash
