@@ -1,7 +1,7 @@
 # Makefile para o TechChallenge Fase 1
 # Comandos essenciais para desenvolvimento
 
-.PHONY: setup test lint format help docker-up docker-down
+.PHONY: setup test lint format help docker-up docker-down train
 
 # Verifica se o arquivo .env existe
 CHECK_ENV := $(shell test -f .env && echo 1 || echo 0)
@@ -24,6 +24,9 @@ help:
 	@echo "  make test       - Rodar testes"
 	@echo "  make lint       - Verificar codigo com ruff"
 	@echo "  make format     - Formatar codigo com ruff"
+	@echo ""
+	@echo "ML:"
+	@echo "  make train      - Treinar modelo MLP (requer .env + MLflow)"
 	@echo ""
 
 # Setup inicial
@@ -71,6 +74,13 @@ lint:
 format:
 	@echo "Formatando codigo com ruff..."
 	uv run ruff format .
+
+# Treinar modelo MLP
+train:
+	$(ENV_ERROR)
+	@echo "Treinando modelo MLP..."
+	uv run python -m src.pipelines.train
+	@echo "Treinamento concluido!"
 
 # Iniciar Docker em background
 docker-up:
