@@ -98,8 +98,16 @@ def test_run_all_strategies_returns_three_rows(monkeypatch: object) -> None:
         lambda *args, **kwargs: None,
     )
     monkeypatch.setattr(
+        "src.pipelines.run_dummy_baseline.mlflow.log_input",
+        lambda *args, **kwargs: None,
+    )
+    monkeypatch.setattr(
         "src.pipelines.run_dummy_baseline.mlflow.log_artifact",
         lambda *args, **kwargs: None,
+    )
+    monkeypatch.setattr(
+        "src.pipelines.run_dummy_baseline.from_pandas",
+        lambda *args, **kwargs: object(),
     )
 
     results_df = run_all_strategies(

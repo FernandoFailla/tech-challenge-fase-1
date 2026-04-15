@@ -13,6 +13,7 @@ from typing import Any
 
 import mlflow
 import pandas as pd
+from mlflow.data import from_pandas
 from sklearn.dummy import DummyClassifier
 from sklearn.metrics import (
     accuracy_score,
@@ -139,7 +140,7 @@ def setup_mlflow(config: MLflowConfig) -> None:
         os.environ.setdefault("AWS_SECRET_ACCESS_KEY", "minioadmin")
 
 
-def run_all_strategies(
+def run_all_strategies(  # noqa: PLR0914, PLR0915
     train_data: TrainData,
     pipeline_config: PipelineConfig,
     mlflow_config: MLflowConfig,
@@ -150,6 +151,22 @@ def run_all_strategies(
     """
     setup_mlflow(mlflow_config)
     X_train, X_test, y_train, y_test = train_data
+    train_dataset = X_train.copy()
+    train_dataset[pipeline_config.target_column] = y_train
+    test_dataset = X_test.copy()
+    test_dataset[pipeline_config.target_column] = y_test
+
+    train_input = from_pandas(
+        train_dataset,
+        source="data/raw/WA_Fn-UseC_-Telco-Customer-Churn.csv",
+        name="telco_train_split",
+    )
+    test_input = from_pandas(
+        test_dataset,
+        source="data/raw/WA_Fn-UseC_-Telco-Customer-Churn.csv",
+        name="telco_test_split",
+    )
+
     results: list[dict[str, Any]] = []
 
     for strategy in STRATEGIES:
@@ -174,6 +191,9 @@ def run_all_strategies(
 
         run_name = f"dummy_{strategy}"
         with mlflow.start_run(run_name=run_name):
+            mlflow.log_input(train_input, context="training")
+            mlflow.log_input(test_input, context="testing")
+
             mlflow.log_param("model_type", "DummyClassifier")
             mlflow.log_param("strategy", strategy)
             mlflow.log_param("random_seed", pipeline_config.random_seed)
@@ -200,14 +220,24 @@ def run_all_strategies(
         by="f1_score",
         ascending=False,
     )
+
+    best_row = results_df.iloc[0]
     output_path = Path("models/dummy_baseline_comparison.csv")
     output_path.parent.mkdir(parents=True, exist_ok=True)
     results_df.to_csv(output_path, index=False)
 
     with mlflow.start_run(run_name="dummy_comparison_summary"):
+        mlflow.log_input(train_input, context="training")
+        mlflow.log_input(test_input, context="testing")
+
         mlflow.log_param("model_type", "DummyClassifier")
         mlflow.log_param("random_seed", pipeline_config.random_seed)
         mlflow.log_param("strategies", ",".join(STRATEGIES))
+        mlflow.log_param("best_strategy", str(best_row["strategy"]))
+
+        mlflow.log_metric("best_f1_score", float(best_row["f1_score"]))
+        mlflow.log_metric("best_accuracy", float(best_row["accuracy"]))
+
         mlflow.set_tag("issue", "20")
         mlflow.set_tag("baseline_family", "dummy")
         mlflow.set_tag("model_baseline", "dummy_classifier")
