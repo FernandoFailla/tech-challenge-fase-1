@@ -266,7 +266,7 @@ def main() -> None:  # noqa: PLR0914
             mlflow.log_metric(f"test_{metric_name}", metric_value)
 
         # Salva modelo no MLflow registry
-        mlflow.pytorch.log_model(model, "model")
+        mlflow.pytorch.log_model(model, "model")  # type: ignore[attr-defined]
 
         logger.info(f"Modelo salvo em {model_save_path}")
 
