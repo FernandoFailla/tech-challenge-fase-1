@@ -24,22 +24,24 @@ import argparse
 import logging
 import os
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 import mlflow
 import numpy as np
 import pandas as pd
 import torch
-from dotenv import load_dotenv
-from sklearn.preprocessing import StandardScaler
 
 from src.data.prepare_telco_dataset import load_telco_data
+from src.data.preprocessing import mlp_preprocess_data
 from src.data.splitting import split_train_test_stratified
 from src.data.validation import validate_required_columns
-from src.data.versioning import get_dataset_version_from_dvc
 from src.models import MLPConfig, MLPForTraining, TrainingConfig
-from src.models.metrics import ClassificationMetrics
+from src.pipelines.common import (
+    get_experiment_name,
+    load_dotenv_silent,
+    safe_get_dataset_version,
+)
 from src.training import MLPTrainer
+from src.training.metrics import compute_binary_classification_metrics
 from src.training.mlflow_tracking import (
     MLflowConfig,
     TrainTestData,
@@ -47,95 +49,12 @@ from src.training.mlflow_tracking import (
     setup_mlflow,
 )
 
-if TYPE_CHECKING:
-    from sklearn.base import BaseEstimator
-
 logger = logging.getLogger(__name__)
 
 # Limiar para converter probabilidades em predições binárias
 THRESHOLD: float = 0.5
 RANDOM_SEED: int = 42
 TARGET_COLUMN: str = "Churn"
-POSITIVE_LABEL: str = "Yes"
-
-
-def mlp_preprocess_data(
-    df: pd.DataFrame,
-) -> tuple[np.ndarray, np.ndarray, list[str]]:
-    """Pré-processa o DataFrame bruto do Telco para treino de ML.
-
-    Esta função realiza transformações necessárias para preparar dados
-    tabulares para uma rede neural:
-
-    Passos de pré-processamento:
-        1. Remove customerID (não é uma feature)
-        2. Codifica Churn: "Yes"->1, "No"->0 (target binário)
-        3. Converte TotalCharges para numérico, preenchendo NaNs com 0
-        4. One-hot encoding para variáveis categóricas
-        5. StandardScaler para variáveis numéricas (média=0, std=1)
-
-    Por que cada passo:
-        - One-hot: Redes neurais requerem entrada numérica
-        - StandardScaler: Normalização acelera convergência
-            e melhora estabilidade
-        - drop_first=True: Evita multicolinearidade
-
-    Args:
-        df: DataFrame bruto do dataset Telco Customer Churn
-
-    Returns:
-        Tupla contendo:
-            - X: Array de features de shape (n_samples,
-                n_features)
-            - y: Array de targets de shape (n_samples,)
-            - feature_names: Lista com nomes das features
-                após pré-processamento
-
-    Exemplo:
-        >>> df = pd.read_csv("WA_Fn-UseC_-Telco-Customer-Churn.csv")
-        >>> X, y, features = mlp_preprocess_data(df)
-        >>> print(f"Features: {len(features)}")  # ~45 após one-hot
-    """
-    # Remove ID do cliente - não é uma feature útil para predição
-    df = df.drop(columns=["customerID"])
-
-    # Codifica target: 1 para churn (Yes), 0 para retenção (No)
-    # Usamos map para conversão explícita
-    df["Churn"] = df["Churn"].map({"Yes": 1, "No": 0})
-
-    # TotalCharges às vezes vem como string vazia " " - converte para numérico
-    # errors='coerce' converte valores inválidos em NaN
-    df["TotalCharges"] = pd.to_numeric(df["TotalCharges"], errors="coerce")
-    # Preenche NaNs com 0 - assumindo clientes novos sem histórico de cobrança
-    df["TotalCharges"] = df["TotalCharges"].fillna(0.0)
-
-    # Separa colunas categóricas (object/string) e numéricas (int/float)
-    categorical_cols = df.select_dtypes(include=["object"]).columns.tolist()
-    numerical_cols = df.select_dtypes(
-        include=["int64", "float64"]
-    ).columns.tolist()
-    numerical_cols.remove("Churn")  # Target não é feature
-
-    # One-hot encoding: converte categorias em colunas binárias
-    # drop_first=True remove uma categoria para evitar multicolinearidade
-    # Exemplo: "Gender" -> "Gender_Male" (1=masculino, 0=feminino)
-    df_encoded = pd.get_dummies(df, columns=categorical_cols, drop_first=True)
-
-    # StandardScaler: z = (x - média) / desvio_padrão
-    # Importante para redes neurais - features na mesma escada evitam
-    # gradientes dominantes e aceleram convergência
-    scaler: BaseEstimator = StandardScaler()
-    df_encoded[numerical_cols] = scaler.fit_transform(
-        df_encoded[numerical_cols]
-    )
-
-    # Separa features (X) e target (y)
-    # Converte para numpy arrays - formato esperado por PyTorch
-    y = np.asarray(df_encoded["Churn"].values, dtype=np.float64)
-    X = np.asarray(df_encoded.drop(columns=["Churn"]).values, dtype=np.float64)
-    feature_names = df_encoded.drop(columns=["Churn"]).columns.tolist()
-
-    return X, y, feature_names
 
 
 def main() -> None:  # noqa: PLR0914, PLR0915
@@ -174,15 +93,14 @@ def main() -> None:  # noqa: PLR0914, PLR0915
     args = parser.parse_args()
 
     # Carrega variáveis de ambiente (.env)
-    load_dotenv()
+    load_dotenv_silent()
 
     # Configura MLflow via módulo genérico
     # Prioridade: CLI arg > MLP-specific env > generic env > default
-    experiment_name = (
-        args.experiment_name
-        or os.getenv("MLFLOW_MLP_EXPERIMENT_NAME")
-        or os.getenv("MLFLOW_EXPERIMENT_NAME")
-        or "tech-challenge-default"
+    experiment_name = get_experiment_name(
+        cli_arg=args.experiment_name,
+        env_var_name="MLFLOW_MLP_EXPERIMENT_NAME",
+        default_name="tech-challenge-mlp",
     )
     mlflow_config = MLflowConfig(
         tracking_uri=os.getenv("MLFLOW_TRACKING_URI", "http://localhost:5000"),
@@ -231,8 +149,10 @@ def main() -> None:  # noqa: PLR0914, PLR0915
         X_test = X_test[valid_test_indices]
         y_train_numeric = y_train_numeric[valid_train_indices]
         y_test_numeric = y_test_numeric[valid_test_indices]
-    y_train = y_train_numeric.values
-    y_test = y_test_numeric.values
+
+    # Converte para numpy arrays (tipado explícito para mypy)
+    y_train_arr: np.ndarray = np.asarray(y_train_numeric.values)
+    y_test_arr: np.ndarray = np.asarray(y_test_numeric.values)
 
     logger.info(f"Conjunto de treino: {X_train.shape[0]} amostras")
     logger.info(f"Conjunto de teste: {X_test.shape[0]} amostras")
@@ -242,15 +162,12 @@ def main() -> None:  # noqa: PLR0914, PLR0915
     train_test_data = TrainTestData(
         X_train=X_train_df,
         X_test=X_test_df,
-        y_train=y_train,
-        y_test=y_test,
+        y_train=y_train_arr,
+        y_test=y_test_arr,
     )
 
     # Obtém versão do dataset via DVC
-    try:
-        dataset_version = get_dataset_version_from_dvc()
-    except (FileNotFoundError, ValueError):
-        dataset_version = "unknown"
+    dataset_version = safe_get_dataset_version()
 
     train_input, test_input = build_mlflow_inputs(
         train_test_data,
@@ -289,9 +206,9 @@ def main() -> None:  # noqa: PLR0914, PLR0915
 
     # === 5. TREINAMENTO COM MLFLOW ===
     with mlflow.start_run():
-        # Log inputs de dados
-        mlflow.log_input(train_input, context="training")
-        mlflow.log_input(test_input, context="testing")
+        # Log inputs de dados (type: ignore para mlflow typed stubs)
+        mlflow.log_input(train_input, context="training")  # type: ignore[arg-type]
+        mlflow.log_input(test_input, context="testing")  # type: ignore[arg-type]
 
         # Registra parâmetros da arquitetura
         mlflow.log_params(
@@ -314,7 +231,7 @@ def main() -> None:  # noqa: PLR0914, PLR0915
         logger.info("Iniciando treinamento")
         model_save_path = Path("models/churn_mlp_best.pt")
         _history = trainer.fit(
-            X_train, y_train, model_save_path=str(model_save_path)
+            X_train, y_train_arr, model_save_path=str(model_save_path)
         )
 
         # Registra métricas de treino no MLflow
@@ -337,7 +254,13 @@ def main() -> None:  # noqa: PLR0914, PLR0915
             preds = (probs > THRESHOLD).astype(int)
 
         # Calcula métricas de classificação
-        test_metrics = ClassificationMetrics.compute(y_test, preds, probs)
+        # positive_label=None indica dados já numéricos (0/1)
+        test_metrics = compute_binary_classification_metrics(
+            y_true=y_test_arr,
+            y_pred=preds,
+            y_proba_positive=probs,
+            positive_label=None,
+        )
         logger.info(f"Métricas de teste: {test_metrics}")
 
         # Registra métricas de teste no MLflow
@@ -345,7 +268,7 @@ def main() -> None:  # noqa: PLR0914, PLR0915
             mlflow.log_metric(f"test_{metric_name}", metric_value)
 
         # Salva modelo no MLflow registry
-        mlflow.pytorch.log_model(model, "model")  # type: ignore[attr-defined]
+        mlflow.pytorch.log_model(model, "model")
 
         logger.info(f"Modelo salvo em {model_save_path}")
 

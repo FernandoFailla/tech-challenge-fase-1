@@ -78,13 +78,6 @@ format:
 	@echo "Formatando codigo com ruff..."
 	uv run ruff format .
 
-# Treinar modelo MLP
-train:
-	$(ENV_ERROR)
-	@echo "Treinando modelo MLP..."
-	uv run python -m src.pipelines.train_mlp
-	@echo "Treinamento concluido!"
-
 # Iniciar Docker em background
 docker-up:
 	$(ENV_ERROR)
@@ -117,7 +110,7 @@ train-dummy:
 train-mlp:
 	$(ENV_ERROR)
 	@echo "Treinando modelo MLP..."
-	uv run python -m src.pipelines.train_mlp
+	uv run python -m src.pipelines.run_mlp
 	@echo "Treinamento MLP concluido!"
 
 # Futuro: Treinar modelo Logistic Regression

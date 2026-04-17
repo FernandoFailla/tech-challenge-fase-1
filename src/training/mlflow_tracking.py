@@ -4,13 +4,11 @@ from __future__ import annotations
 
 import os
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
 
 import mlflow
+import numpy as np
+import pandas as pd
 from mlflow.data import from_pandas  # type: ignore[attr-defined]
-
-if TYPE_CHECKING:
-    import pandas as pd
 
 DEFAULT_DATASET_SOURCE_PATH = "data/raw/WA_Fn-UseC_-Telco-Customer-Churn.csv"
 
@@ -27,12 +25,17 @@ class MLflowConfig:
 
 @dataclass(frozen=True)
 class TrainTestData:
-    """Estrutura com split de treino e teste para lineage."""
+    """Estrutura com split de treino e teste para lineage.
+
+    Suporta tanto pandas Series quanto numpy arrays para targets,
+    facilitando integração com diferentes pipelines (sklearn usa
+    Series, PyTorch usa arrays).
+    """
 
     X_train: pd.DataFrame
     X_test: pd.DataFrame
-    y_train: pd.Series
-    y_test: pd.Series
+    y_train: pd.Series | np.ndarray
+    y_test: pd.Series | np.ndarray
 
 
 def setup_mlflow(config: MLflowConfig) -> None:
@@ -60,13 +63,36 @@ def build_mlflow_inputs(
     dataset_version: str,
     dataset_source_path: str = DEFAULT_DATASET_SOURCE_PATH,
 ) -> tuple[object, object]:
-    """Cria datasets de input para lineage sem digest fixo manual."""
+    """Cria datasets de input para lineage sem digest fixo manual.
+
+    Converte automaticamente y_train/y_test para Series se
+    forem arrays numpy, garantindo compatibilidade com MLflow.
+
+    Returns:
+        Tupla de (train_input, test_input) como objetos Dataset MLflow.
+        Retorna object pois o tipo específico não está disponível em
+        type stubs.
+    """
     dataset_version_short = dataset_version[:8]
 
+    # Converte arrays para Series se necessário
+    y_train_series: pd.Series
+    y_test_series: pd.Series
+
+    if isinstance(train_test_data.y_train, np.ndarray):
+        y_train_series = pd.Series(train_test_data.y_train)
+    else:
+        y_train_series = train_test_data.y_train
+
+    if isinstance(train_test_data.y_test, np.ndarray):
+        y_test_series = pd.Series(train_test_data.y_test)
+    else:
+        y_test_series = train_test_data.y_test
+
     train_dataset = train_test_data.X_train.copy()
-    train_dataset[target_column] = train_test_data.y_train
+    train_dataset[target_column] = y_train_series
     test_dataset = train_test_data.X_test.copy()
-    test_dataset[target_column] = train_test_data.y_test
+    test_dataset[target_column] = y_test_series
 
     train_input = from_pandas(
         train_dataset,

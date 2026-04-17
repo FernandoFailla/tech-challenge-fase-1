@@ -10,14 +10,6 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-# Carregar variáveis de ambiente do arquivo .env
-try:
-    from dotenv import load_dotenv
-
-    load_dotenv()
-except ImportError:
-    pass
-
 import mlflow
 import pandas as pd
 from sklearn.dummy import DummyClassifier
@@ -28,7 +20,11 @@ from src.data.validation import (
     validate_binary_target,
     validate_required_columns,
 )
-from src.data.versioning import get_dataset_version_from_dvc
+from src.pipelines.common import (
+    get_experiment_name,
+    load_dotenv_silent,
+    safe_get_dataset_version,
+)
 from src.training.metrics import compute_binary_classification_metrics
 from src.training.mlflow_tracking import (
     MLflowConfig,
@@ -74,7 +70,7 @@ def run_all_strategies(  # noqa: PLR0914, PLR0915
     """
     setup_mlflow(mlflow_config)
     X_train, X_test, y_train, y_test = train_data
-    dataset_version = get_dataset_version_from_dvc()
+    dataset_version = safe_get_dataset_version()
     train_test_data = TrainTestData(
         X_train=X_train,
         X_test=X_test,
@@ -116,8 +112,8 @@ def run_all_strategies(  # noqa: PLR0914, PLR0915
 
         run_name = f"dummy_{strategy}"
         with mlflow.start_run(run_name=run_name):
-            mlflow.log_input(train_input, context="training")
-            mlflow.log_input(test_input, context="testing")
+            mlflow.log_input(train_input, context="training")  # type: ignore[arg-type]
+            mlflow.log_input(test_input, context="testing")  # type: ignore[arg-type]
 
             mlflow.log_param("model_type", "DummyClassifier")
             mlflow.log_param("strategy", strategy)
@@ -153,8 +149,8 @@ def run_all_strategies(  # noqa: PLR0914, PLR0915
     results_df.to_csv(output_path, index=False)
 
     with mlflow.start_run(run_name="dummy_comparison_summary"):
-        mlflow.log_input(train_input, context="training")
-        mlflow.log_input(test_input, context="testing")
+        mlflow.log_input(train_input, context="training")  # type: ignore[arg-type]
+        mlflow.log_input(test_input, context="testing")  # type: ignore[arg-type]
 
         mlflow.log_param("model_type", "DummyClassifier")
         mlflow.log_param("random_seed", pipeline_config.random_seed)
@@ -176,10 +172,18 @@ def run_all_strategies(  # noqa: PLR0914, PLR0915
 
 def main() -> int:
     """Ponto de entrada do script."""
+    # Carrega variáveis de ambiente
+    load_dotenv_silent()
+
     config = PipelineConfig()
-    mlflow_config = MLflowConfig(
-        experiment_name="tech-challenge-dummy-baseline"
+
+    # Obtém nome do experimento com prioridade
+    experiment_name = get_experiment_name(
+        cli_arg=None,
+        env_var_name="MLFLOW_DUMMY_EXPERIMENT_NAME",
+        default_name="tech-challenge-dummy-baseline",
     )
+    mlflow_config = MLflowConfig(experiment_name=experiment_name)
 
     df = load_telco_data()
     validate_required_columns(df, config.target_column)

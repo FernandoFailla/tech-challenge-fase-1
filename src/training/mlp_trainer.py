@@ -22,10 +22,10 @@ from torch.optim.lr_scheduler import ReduceLROnPlateau, StepLR
 from torch.utils.data import DataLoader, TensorDataset
 
 from src.models.config import TrainingConfig
-from src.models.metrics import ClassificationMetrics
 from src.models.mlp import MLPForTraining
 from src.training.checkpoint import save_best_model
 from src.training.early_stopping import EarlyStopping
+from src.training.metrics import compute_binary_classification_metrics
 
 logger = logging.getLogger(__name__)
 
@@ -210,9 +210,9 @@ class MLPTrainer:
             # Registra métricas no histórico
             self.history["train_loss"].append(train_loss)
             self.history["val_loss"].append(val_loss)
-            self.history["val_f1"].append(val_metrics["f1"])
-            if "auc_roc" in val_metrics:
-                self.history["val_auc"].append(val_metrics["auc_roc"])
+            self.history["val_f1"].append(val_metrics["f1_score"])
+            if "roc_auc" in val_metrics:
+                self.history["val_auc"].append(val_metrics["roc_auc"])
 
             logger.info(
                 f"Epoch {epoch + 1}/{self.config.max_epochs} - "
@@ -324,10 +324,12 @@ class MLPTrainer:
         avg_loss = total_loss / num_batches
 
         # Calcula métricas no conjunto completo de validação
-        metrics = ClassificationMetrics.compute(
-            np.concatenate(all_targets),
-            np.concatenate(all_preds),
-            np.concatenate(all_probs),
+        # positive_label=None indica dados já numéricos (0/1)
+        metrics = compute_binary_classification_metrics(
+            y_true=np.concatenate(all_targets),
+            y_pred=np.concatenate(all_preds),
+            y_proba_positive=np.concatenate(all_probs),
+            positive_label=None,
         )
 
         return avg_loss, metrics

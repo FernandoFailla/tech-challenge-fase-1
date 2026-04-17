@@ -9,6 +9,24 @@ ML pipeline for telecom churn prediction. Python 3.12+, PyTorch MLP, scikit-lear
 - **Function over form** - working code beats perfect architecture
 - **Less is more** - fewer lines, fewer files, fewer dependencies
 
+### Code Sharing Between Experiments
+
+Three ML pipelines (dummy, MLP, logistic) share common infrastructure but keep experiment-specific code explicit:
+
+**Shared (extracted to modules):**
+- Data loading: `src.data.prepare_telco_dataset.load_telco_data()`
+- Data split: `src.data.splitting.split_train_test_stratified()`
+- MLflow setup: `src.training.mlflow_tracking.setup_mlflow()`, `build_mlflow_inputs()`
+- Metrics: `src.training.metrics.compute_binary_classification_metrics()`
+
+**Duplicated OK (kept per-pipeline for clarity):**
+- Model-specific param logging (each model logs different values)
+- Preprocessing (Dummy uses strings, MLP uses numeric tensors)
+- Results post-processing (CSV comparison vs torch model saving)
+- CLI argument parsing (only where needed)
+
+**Rule:** Extract helpers only when genuinely identical AND extraction does not increase abstraction complexity. Prefer explicit duplication over clever abstractions.
+
 ## Commands
 
 Uses `uv` as package manager. Always prefix Python commands with `uv run`.
@@ -33,6 +51,22 @@ uv run mypy src/              # Type check (strict mode)
 make docker-up                # Start MLflow + PostgreSQL + MinIO
 make docker-down              # Stop containers
 ```
+
+## ML Experiments
+
+Three baseline experiments tracked in MLflow:
+
+| Experiment | Command | Status |
+|------------|---------|--------|
+| Dummy Baseline | `make train-dummy` or `uv run python -m src.pipelines.run_dummy_baseline` | Ready |
+| MLP | `make train-mlp` or `uv run python -m src.pipelines.run_mlp` | Ready |
+| Logistic Regression | `make train-logistic` (planned) | Future |
+
+All experiments share:
+- Data loading: `src.data.prepare_telco_dataset.load_telco_data()`
+- Split: `src.data.splitting.split_train_test_stratified()`
+- MLflow setup: `src.training.mlflow_tracking.setup_mlflow()`
+- Metrics: `src.training.metrics.compute_binary_classification_metrics()`
 
 ## Code Style (Strict)
 
@@ -89,6 +123,8 @@ docs/              # Documentation
 3. **Coverage minimum 80%** - enforced in CI via pyproject.toml
 4. **Test markers:** `@pytest.mark.fast` for quick tests, `@pytest.mark.slow` for integration
 5. **NO emojis anywhere** - use ASCII text equivalents (see Text Style section below)
+6. **NO unrequested documentation** - do not create .md files, CHANGELOGs, or docs unless explicitly asked
+7. **NO deprecated code** - if code is not used, remove it; do not keep "for future use" or "backward compatibility"
 
 ## Text and Documentation Style
 
