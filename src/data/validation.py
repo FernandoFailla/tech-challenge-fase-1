@@ -17,12 +17,12 @@ def validate_required_columns(df: pd.DataFrame, target_column: str) -> None:
 
 def validate_binary_target(
     y: pd.Series,
-    positive_label: str | int,
+    positive_label: str,
     min_target_classes: int = 2,
 ) -> None:
     """Valida presença da classe positiva e cardinalidade mínima do alvo."""
     unique_values = set(y.astype(str).unique().tolist())
-    if str(positive_label) not in unique_values:
+    if positive_label not in unique_values:
         msg = (
             f"Classe positiva '{positive_label}' não encontrada "
             "na coluna alvo. "

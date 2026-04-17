@@ -14,7 +14,7 @@ def split_train_test_stratified(
 ) -> tuple[pd.DataFrame, pd.DataFrame, pd.Series, pd.Series]:
     """Separa treino e teste com seed fixa e estratificação no alvo."""
     X = df.drop(columns=[target_column])
-    y = df[target_column]
+    y = df[target_column].astype(str)
 
     X_train, X_test, y_train, y_test = train_test_split(
         X,

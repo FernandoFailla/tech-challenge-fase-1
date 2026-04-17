@@ -19,7 +19,9 @@ DEFAULT_DATASET_SOURCE_PATH = "data/raw/WA_Fn-UseC_-Telco-Customer-Churn.csv"
 class MLflowConfig:
     """Configuração de tracking do MLflow."""
 
-    tracking_uri: str = "http://localhost:5000"
+    tracking_uri: str = os.getenv(
+        "MLFLOW_TRACKING_URI", "http://localhost:5001"
+    )
     experiment_name: str = "tech-challenge-default"
 
 
@@ -39,12 +41,31 @@ def setup_mlflow(config: MLflowConfig) -> None:
     mlflow.set_experiment(config.experiment_name)
 
     tracking_uri = config.tracking_uri
-    if "localhost:5000" in tracking_uri:
+    if "localhost:5000" in tracking_uri or "localhost:5001" in tracking_uri:
         os.environ.setdefault(
             "MLFLOW_S3_ENDPOINT_URL", "http://localhost:9000"
         )
-        os.environ.setdefault("AWS_ACCESS_KEY_ID", "minioadmin")
-        os.environ.setdefault("AWS_SECRET_ACCESS_KEY", "minioadmin")
+        os.environ.setdefault(
+            "AWS_ACCESS_KEY_ID", os.getenv("MINIO_ACCESS_KEY", "minioadmin")
+        )
+        os.environ.setdefault(
+            "AWS_SECRET_ACCESS_KEY",
+            os.getenv("MINIO_SECRET_KEY", "minioadmin"),
+        )
+        os.environ.setdefault(
+            "AWS_ACCESS_KEY_ID", os.getenv("MINIO_ACCESS_KEY", "minioadmin")
+        )
+        os.environ.setdefault(
+            "AWS_SECRET_ACCESS_KEY",
+            os.getenv("MINIO_SECRET_KEY", "minioadmin"),
+        )
+        os.environ.setdefault(
+            "AWS_ACCESS_KEY_ID", os.getenv("MINIO_ACCESS_KEY", "minioadmin")
+        )
+        os.environ.setdefault(
+            "AWS_SECRET_ACCESS_KEY",
+            os.getenv("MINIO_SECRET_KEY", "minioadmin"),
+        )
 
 
 def build_mlflow_inputs(

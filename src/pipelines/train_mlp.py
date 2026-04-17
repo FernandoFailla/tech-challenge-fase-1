@@ -216,8 +216,23 @@ def main() -> None:  # noqa: PLR0914, PLR0915
     # Converte de volta para numpy
     X_train = X_train_df.values
     X_test = X_test_df.values
-    y_train = y_train.values
-    y_test = y_test.values
+    # Converte target de string para número (0.0 -> 0, 1.0 -> 1) para PyTorch
+    y_train_numeric = pd.to_numeric(y_train, errors="coerce")
+    y_test_numeric = pd.to_numeric(y_test, errors="coerce")
+    # Verifica se há NaNs antes da conversão para numpy
+    if y_train_numeric.isna().any() or y_test_numeric.isna().any():
+        print("WARNING: NaN values found in target data")
+        print(f"y_train NaN count: {y_train_numeric.isna().sum()}")
+        print(f"y_test NaN count: {y_test_numeric.isna().sum()}")
+        # Remove entradas com NaN
+        valid_train_indices = y_train_numeric.notna()
+        valid_test_indices = y_test_numeric.notna()
+        X_train = X_train[valid_train_indices]
+        X_test = X_test[valid_test_indices]
+        y_train_numeric = y_train_numeric[valid_train_indices]
+        y_test_numeric = y_test_numeric[valid_test_indices]
+    y_train = y_train_numeric.values
+    y_test = y_test_numeric.values
 
     logger.info(f"Conjunto de treino: {X_train.shape[0]} amostras")
     logger.info(f"Conjunto de teste: {X_test.shape[0]} amostras")

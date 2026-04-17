@@ -1,7 +1,7 @@
 # Makefile para o TechChallenge Fase 1
 # Comandos essenciais para desenvolvimento
 
-.PHONY: setup test lint format help docker-up docker-down train
+.PHONY: setup test lint format help docker-up docker-down train train-dummy train-mlp train-logistic
 
 # Verifica se o arquivo .env existe
 CHECK_ENV := $(shell test -f .env && echo 1 || echo 0)
@@ -26,7 +26,10 @@ help:
 	@echo "  make format     - Formatar codigo com ruff"
 	@echo ""
 	@echo "ML:"
-	@echo "  make train      - Treinar modelo MLP (requer .env + MLflow)"
+	@echo "  make train      - Treinar todos os modelos (requer .env + MLflow)"
+	@echo "  make train-dummy - Treinar baseline DummyClassifier"
+	@echo "  make train-mlp  - Treinar modelo MLP (requer .env + MLflow)"
+	@echo "  make train-logistic - Treinar modelo Logistic Regression (futuro)"
 	@echo ""
 
 # Setup inicial
@@ -91,6 +94,36 @@ docker-up:
 
 # Parar Docker
 docker-down:
-	@echo "[STOP] Parando containers MLflow..."
+	@echo "[STOP] Pararando containers MLflow..."
 	docker compose -f docker/docker-compose.yml --env-file .env down
 	@echo "[OK] Containers parados!"
+
+# Treinar todos os modelos
+train:
+	$(ENV_ERROR)
+	@echo "Treinando todos os modelos..."
+	make train-dummy
+	make train-mlp
+	@echo "Todos os treinamentos concluidos!"
+
+# Treinar baseline DummyClassifier
+train-dummy:
+	$(ENV_ERROR)
+	@echo "Treinando baseline DummyClassifier..."
+	uv run python -m src.pipelines.run_dummy_baseline
+	@echo "Baseline DummyClassifier concluido!"
+
+# Treinar modelo MLP
+train-mlp:
+	$(ENV_ERROR)
+	@echo "Treinando modelo MLP..."
+	uv run python -m src.pipelines.train_mlp
+	@echo "Treinamento MLP concluido!"
+
+# Futuro: Treinar modelo Logistic Regression
+train-logistic:
+	$(ENV_ERROR)
+	@echo "Treinando modelo Logistic Regression..."
+	@echo "[WARN] Modelo ainda em desenvolvimento"
+	@echo "Proximo passo: criar src/pipelines/train_logistic.py"
+	@echo "Treinamento Logistic Regression concluido!"
