@@ -88,6 +88,33 @@ docs/              # Documentation
 2. **All code needs type hints** - mypy runs in strict mode
 3. **Coverage minimum 80%** - enforced in CI via pyproject.toml
 4. **Test markers:** `@pytest.mark.fast` for quick tests, `@pytest.mark.slow` for integration
+5. **NO emojis anywhere** - use ASCII text equivalents (see Text Style section below)
+
+## Text and Documentation Style
+
+**NO emojis in any file** - this includes source code, documentation, comments, commit messages, and shell scripts. Use ASCII text equivalents:
+
+| Instead of | Use |
+|------------|-----|
+| Checkmark | `[OK]`, `Success:`, `Done:` |
+| Cross | `[ERROR]`, `Error:` |
+| Warning | `[WARN]`, `Warning:` |
+| Whale | `Docker:` |
+| Rocket | `Starting...`, `Launching...` |
+| Lightbulb | `Tip:`, `Note:` |
+| Chart | `Results:`, `Metrics:` |
+| Target | `Goal:`, `Next:` |
+| Wrench | `Config:`, `Setup:` |
+| Folder | `Directory:`, `Folder:` |
+| Clipboard | `List:`, `Summary:` |
+
+**NO emoji in:**
+- Source code (Python files)
+- Documentation (README, AGENTS.md, etc)
+- Comments (inline or block)
+- Commit messages
+- Shell scripts (Makefile, .sh files)
+- Configuration files
 
 ## Environment Setup
 

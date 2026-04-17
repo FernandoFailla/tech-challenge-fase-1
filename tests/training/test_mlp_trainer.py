@@ -6,7 +6,7 @@ import numpy as np
 import pytest
 
 from src.models import MLPConfig, MLPForTraining, TrainingConfig
-from src.training import Trainer
+from src.training import MLPTrainer
 
 
 @pytest.mark.slow
@@ -25,7 +25,7 @@ def test_overfit_single_batch(tmp_path: Path) -> None:
         val_split=0.2,
     )
 
-    trainer = Trainer(model, training_config, device="cpu")
+    trainer = MLPTrainer(model, training_config, device="cpu")
 
     np.random.seed(42)
     X = np.random.randn(32, 10).astype(np.float32)
@@ -50,7 +50,7 @@ def test_fit_returns_history() -> None:
         early_stopping_patience=10,
     )
 
-    trainer = Trainer(model, training_config, device="cpu")
+    trainer = MLPTrainer(model, training_config, device="cpu")
 
     X = np.random.randn(64, 10).astype(np.float32)
     y = np.random.randint(0, 2, 64).astype(np.float32)

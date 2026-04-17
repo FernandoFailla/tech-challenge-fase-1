@@ -6,7 +6,7 @@
 # Verifica se o arquivo .env existe
 CHECK_ENV := $(shell test -f .env && echo 1 || echo 0)
 ifeq ($(CHECK_ENV),0)
-  ENV_ERROR = @echo "❌ ERRO: Arquivo .env não encontrado!" && echo "👉 Copie .env.example para .env:" && echo "   cp .env.example .env" && echo "" && exit 1
+  ENV_ERROR = @echo "[ERROR] ERRO: Arquivo .env não encontrado!" && echo "Tip: Copie .env.example para .env:" && echo "   cp .env.example .env" && echo "" && exit 1
 endif
 
 # Help padrao
@@ -54,9 +54,9 @@ setup:
 	fi; \
 	if [ -n "$$URL" ]; then \
 		dvc remote modify onedrive_remote url "$$URL"; \
-		echo "✅ DVC remote configurado para: $$URL"; \
+		echo "[OK] DVC remote configurado para: $$URL"; \
 	else \
-		echo "⚠️ Aviso: URL remota do DVC nao definida."; \
+		echo "[WARN] Aviso: URL remota do DVC nao definida."; \
 	fi
 	@echo "Setup concluido!"
 
@@ -79,18 +79,18 @@ format:
 train:
 	$(ENV_ERROR)
 	@echo "Treinando modelo MLP..."
-	uv run python -m src.pipelines.train
+	uv run python -m src.pipelines.train_mlp
 	@echo "Treinamento concluido!"
 
 # Iniciar Docker em background
 docker-up:
 	$(ENV_ERROR)
-	@echo "🐳 Iniciando MLflow em background..."
+	@echo "Docker: Iniciando MLflow em background..."
 	docker compose -f docker/docker-compose.yml --env-file .env up -d
-	@echo "✅ MLflow iniciado! Acesse http://localhost:$$(grep -E '^MLFLOW_PORT=' .env | cut -d '=' -f2) para usar."
+	@echo "[OK] MLflow iniciado! Acesse http://localhost:$$(grep -E '^MLFLOW_PORT=' .env | cut -d '=' -f2) para usar."
 
 # Parar Docker
 docker-down:
-	@echo "🛑 Parando containers MLflow..."
+	@echo "[STOP] Parando containers MLflow..."
 	docker compose -f docker/docker-compose.yml --env-file .env down
-	@echo "✅ Containers parados!"
+	@echo "[OK] Containers parados!"

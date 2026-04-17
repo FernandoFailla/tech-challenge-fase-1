@@ -1,6 +1,6 @@
 """Loop de treino principal para modelo MLP com integração MLflow.
 
-Este módulo implementa o Trainer, que orquestra o treino do modelo MLP.
+Este módulo implementa o MLPTrainer, que orquestra o treino do modelo MLP.
 Inclui:
 - Loop de treino com validação
 - Detecção automática de dispositivo (GPU/CPU)
@@ -32,7 +32,7 @@ logger = logging.getLogger(__name__)
 THRESHOLD: float = 0.5
 
 
-class Trainer:
+class MLPTrainer:
     """Orquestrador de treino para modelo MLP.
 
     Esta classe gerencia todo o ciclo de vida do treino: configuração do
@@ -50,7 +50,7 @@ class Trainer:
 
     Exemplo:
         >>> config = TrainingConfig(lr=0.001, batch_size=64)
-        >>> trainer = Trainer(model, config)
+        >>> trainer = MLPTrainer(model, config)
         >>> history = trainer.fit(X_train, y_train)
         >>> trainer.log_to_mlflow()
     """
@@ -61,7 +61,7 @@ class Trainer:
         config: TrainingConfig,
         device: str = "auto",
     ) -> None:
-        """Inicializa o Trainer com modelo e configuração.
+        """Inicializa o MLPTrainer com modelo e configuração.
 
         Configura automaticamente o dispositivo (GPU/CPU), otimizador,
         scheduler e callbacks de treino.

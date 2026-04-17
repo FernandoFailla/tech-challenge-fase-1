@@ -158,7 +158,7 @@ AWS_SECRET_ACCESS_KEY=minioadmin_secret_key_2024
 MLFLOW_EXPERIMENT_NAME=tech-challenge-default
 ```
 
-> 🔒 Segurança: nunca versionar o arquivo `.env` com credenciais reais.
+> Security: nunca versionar o arquivo `.env` com credenciais reais.
 
 ## Comandos básicos
 
@@ -205,10 +205,10 @@ Para treinar o modelo MLP (Multi-Layer Perceptron) com PyTorch:
 make train
 
 # Opção 2: Executando diretamente com uv
-uv run python -m src.pipelines.train
+uv run python -m src.pipelines.train_mlp
 
 # Opção 3: Com argumentos customizados
-uv run python -m src.pipelines.train \
+uv run python -m src.pipelines.train_mlp \
     --input data/raw/WA_Fn-UseC_-Telco-Customer-Churn.csv \
     --experiment-name churn-mlp-v1
 ```
@@ -260,7 +260,7 @@ Marcos críticos:
 
 ## Boas práticas e módulos previstos (baseado na Issue #3)
 
-> ✅ **Status:** esta seção descreve direcionadores e componentes **previstos** para evolução do projeto.
+> [OK] **Status:** esta seção descreve direcionadores e componentes **previstos** para evolução do projeto.
 
 Boas práticas de engenharia previstas:
 
