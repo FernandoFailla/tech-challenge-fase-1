@@ -21,8 +21,10 @@ def validate_binary_target(
     min_target_classes: int = 2,
 ) -> None:
     """Valida presença da classe positiva e cardinalidade mínima do alvo."""
+    # Convert positive_label to string to match the conversion of y values
+    positive_label_str = str(positive_label)
     unique_values = set(y.astype(str).unique().tolist())
-    if positive_label not in unique_values:
+    if positive_label_str not in unique_values:
         msg = (
             f"Classe positiva '{positive_label}' não encontrada "
             "na coluna alvo. "

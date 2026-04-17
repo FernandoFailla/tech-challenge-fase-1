@@ -2,11 +2,14 @@
 
 from __future__ import annotations
 
+import importlib
+import os
 from unittest.mock import MagicMock, patch
 
 import pandas as pd
 import pytest
 
+import src.training.mlflow_tracking as mlflow_module
 from src.training.mlflow_tracking import (
     MLflowConfig,
     TrainTestData,
@@ -35,11 +38,25 @@ class TestMLflowConfig:
     """Tests for MLflowConfig dataclass."""
 
     @staticmethod
-    def test_default_values() -> None:
+    def test_default_values(monkeypatch) -> None:
         """Should have sensible defaults."""
-        config = MLflowConfig()
-        assert config.tracking_uri == "http://localhost:5000"
-        assert config.experiment_name == "tech-challenge-default"
+        # Ensure no environment variable interferes
+        monkeypatch.delenv("MLFLOW_TRACKING_URI", raising=False)
+
+        # Patch os.environ to ensure MLFLOW_TRACKING_URI is not set
+        with patch.dict(os.environ, {}, clear=False):
+            if "MLFLOW_TRACKING_URI" in os.environ:
+                del os.environ["MLFLOW_TRACKING_URI"]
+
+            # Force reload of the module to pick up the new environment
+            importlib.reload(mlflow_module)
+
+            config = mlflow_module.MLflowConfig()
+            assert config.tracking_uri == "http://localhost:5000"
+            assert config.experiment_name == "tech-challenge-default"
+
+        # Reload module again to restore normal state
+        importlib.reload(mlflow_module)
 
     @staticmethod
     def test_custom_values() -> None:

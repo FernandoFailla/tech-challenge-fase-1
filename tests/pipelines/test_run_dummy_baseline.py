@@ -165,11 +165,11 @@ def test_setup_mlflow_sets_local_env(monkeypatch: object) -> None:
         lambda _: None,
     )
 
-    setup_mlflow(MLflowConfig())
+    setup_mlflow(MLflowConfig(tracking_uri="http://localhost:5000"))
 
     assert os.environ["MLFLOW_S3_ENDPOINT_URL"] == "http://localhost:9000"
     assert os.environ["AWS_ACCESS_KEY_ID"] == "minioadmin"
-    assert os.environ["AWS_SECRET_ACCESS_KEY"] == "minioadmin"
+    assert os.environ["AWS_SECRET_ACCESS_KEY"] == "minioadmin_secret_key_2024"
 
 
 def test_main_returns_zero_with_monkeypatched_flow(

@@ -61,4 +61,4 @@ def test_validate_binary_target_valid() -> None:
 def test_validate_binary_target_with_numeric_labels() -> None:
     """Should work with numeric labels."""
     y = pd.Series([1, 0, 1, 0])
-    validate_binary_target(y, 1)
+    validate_binary_target(y, "1")
