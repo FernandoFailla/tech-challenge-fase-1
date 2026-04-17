@@ -1,6 +1,6 @@
 """Pipeline do baseline DummyClassifier para churn.
 
-Fase 2: treino, métricas e registro no MLflow.
+Fase 2: treino, metricas e registro no MLflow.
 """
 
 from __future__ import annotations
@@ -14,6 +14,12 @@ import mlflow
 import pandas as pd
 from sklearn.dummy import DummyClassifier
 
+from src.constants import (
+    DEFAULT_DUMMY_EXPERIMENT_NAME,
+    POSITIVE_LABEL,
+    RANDOM_SEED,
+    TARGET_COLUMN,
+)
 from src.data.prepare_telco_dataset import load_telco_data
 from src.data.splitting import split_train_test_stratified
 from src.data.validation import (
@@ -36,10 +42,7 @@ from src.training.mlflow_tracking import (
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8", errors="ignore")
 
-RANDOM_SEED = 42
-TARGET_COLUMN = "Churn"
 STRATEGIES = ("most_frequent", "stratified", "uniform")
-POSITIVE_LABEL = "Yes"
 
 
 @dataclass(frozen=True)
@@ -181,7 +184,7 @@ def main() -> int:
     experiment_name = get_experiment_name(
         cli_arg=None,
         env_var_name="MLFLOW_DUMMY_EXPERIMENT_NAME",
-        default_name="tech-challenge-dummy-baseline",
+        default_name=DEFAULT_DUMMY_EXPERIMENT_NAME,
     )
     mlflow_config = MLflowConfig(experiment_name=experiment_name)
 

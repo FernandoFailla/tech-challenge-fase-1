@@ -160,10 +160,15 @@ class MLPTrainer:
             Histórico de treino com métricas por época:
             {'train_loss': [...], 'val_loss': [...], 'val_f1': [...], ...}
         """
-        # Define seed para reprodutibilidade
+        # Define seed para reprodutibilidade (PyTorch + NumPy)
         torch.manual_seed(self.config.random_seed)
+        np.random.seed(self.config.random_seed)
+        if torch.cuda.is_available():
+            torch.cuda.manual_seed_all(self.config.random_seed)
+            torch.backends.cudnn.deterministic = True
+            torch.backends.cudnn.benchmark = False
 
-        # Cria split de validação se não fornecido
+        # Cria split de validacao se nao fornecido
         if X_val is None or y_val is None:
             val_size = int(len(X_train) * self.config.val_split)
             indices = np.random.permutation(len(X_train))
@@ -218,7 +223,7 @@ class MLPTrainer:
                 f"Epoch {epoch + 1}/{self.config.max_epochs} - "
                 f"Train Loss: {train_loss:.4f} - "
                 f"Val Loss: {val_loss:.4f} - "
-                f"Val F1: {val_metrics['f1']:.4f}"
+                f"Val F1: {val_metrics['f1_score']:.4f}"
             )
 
             # Atualiza learning rate se houver scheduler
