@@ -5,8 +5,9 @@ from pathlib import Path
 import numpy as np
 import pytest
 
-from src.models import MLPConfig, MLPForTraining, TrainingConfig
+from src.configs.config import MLPConfig, TrainingConfig
 from src.training import MLPTrainer
+from src.training.mlp import MLPForTraining
 
 
 @pytest.mark.slow

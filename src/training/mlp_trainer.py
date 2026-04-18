@@ -21,11 +21,11 @@ from torch.optim import SGD, Adam
 from torch.optim.lr_scheduler import ReduceLROnPlateau, StepLR
 from torch.utils.data import DataLoader, TensorDataset
 
-from src.models.config import TrainingConfig
-from src.models.mlp import MLPForTraining
+from src.configs.config import TrainingConfig
 from src.training.checkpoint import save_best_model
 from src.training.early_stopping import EarlyStopping
 from src.training.metrics import compute_binary_classification_metrics
+from src.training.mlp import MLPForTraining
 
 logger = logging.getLogger(__name__)
 

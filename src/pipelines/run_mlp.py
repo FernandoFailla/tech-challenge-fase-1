@@ -30,6 +30,7 @@ import numpy as np
 import pandas as pd
 import torch
 
+from src.configs.config import MLPConfig, TrainingConfig
 from src.constants import (
     DEFAULT_DATASET_PATH,
     DEFAULT_MLP_EXPERIMENT_NAME,
@@ -45,7 +46,6 @@ from src.data.preprocessing import (
 )
 from src.data.splitting import split_train_test_stratified
 from src.data.validation import validate_required_columns
-from src.models import MLPConfig, MLPForTraining, TrainingConfig
 from src.pipelines.common import (
     get_experiment_name,
     load_dotenv_silent,
@@ -59,6 +59,7 @@ from src.training.mlflow_tracking import (
     build_mlflow_inputs,
     setup_mlflow,
 )
+from src.training.mlp import MLPForTraining
 
 logger = logging.getLogger(__name__)
 

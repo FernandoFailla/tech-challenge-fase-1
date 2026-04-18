@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from src.models.config import MLPConfig, TrainingConfig
-from src.models.mlp import MLP, MLPForTraining
+from src.configs.config import MLPConfig, TrainingConfig
+from src.training.mlp import MLP, MLPForTraining
 
 __all__ = [
     "MLP",
