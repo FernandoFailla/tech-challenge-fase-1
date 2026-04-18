@@ -10,9 +10,9 @@ from src.training.mlp import MLP, MLPForTraining
 from src.training.mlp_trainer import MLPTrainer
 
 __all__ = [
+    "MLP",
     "DummyTrainingConfig",
     "EarlyStopping",
-    "MLP",
     "MLPForTraining",
     "MLPTrainer",
     "run_all_strategies",

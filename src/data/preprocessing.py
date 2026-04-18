@@ -18,72 +18,108 @@ if TYPE_CHECKING:
     from sklearn.base import BaseEstimator
 
 
-def mlp_preprocess_data(
-    df: pd.DataFrame,
-) -> tuple[np.ndarray, np.ndarray, list[str], pd.DataFrame]:
-    """Preprocessa o DataFrame bruto do Telco para treino de ML.
-
-    Esta funcao realiza transformacoes necessarias para preparar dados
-    tabulares para uma rede neural. NAO aplica StandardScaler - isso
-    deve ser feito APOS o split treino/teste para evitar data leakage.
-
-    Passos de preprocessamento:
-        1. Remove customerID (nao e uma feature)
-        2. Codifica Churn: "Yes"->1, "No"->0 (target binario)
-        3. Converte TotalCharges para numerico, preenchendo NaNs com 0
-        4. One-hot encoding para variaveis categoricas
-        5. Retorna features nao escaladas (scaling feito separadamente)
-
-    Por que cada passo:
-        - One-hot: Redes neurais requerem entrada numerica
-        - Sem StandardScaler aqui: Evita data leakage - scaler deve ser
-          fitado apenas no conjunto de treino
-        - drop_first=True: Evita multicolinearidade
+def remove_customer_id(df: pd.DataFrame) -> pd.DataFrame:
+    """Remove a coluna customerID do DataFrame.
 
     Args:
-        df: DataFrame bruto do dataset Telco Customer Churn
+        df: DataFrame bruto com coluna customerID
+
+    Returns:
+        DataFrame sem a coluna customerID
+    """
+    return df.drop(columns=["customerID"])
+
+
+def encode_target(df: pd.DataFrame, target_col: str = "Churn") -> pd.DataFrame:
+    """Codifica coluna target para valores binarios.
+
+    Args:
+        df: DataFrame com coluna target
+        target_col: Nome da coluna target (default: "Churn")
+
+    Returns:
+        DataFrame com target codificado (Yes->1, No->0)
+    """
+    df_result = df.copy()
+    df_result[target_col] = df_result[target_col].map({"Yes": 1, "No": 0})
+    return df_result
+
+
+def clean_total_charges(
+    df: pd.DataFrame,
+    fill_value: float = 0.0,
+) -> pd.DataFrame:
+    """Converte TotalCharges para numerico e preenche NaNs.
+
+    TotalCharges as vezes vem como string vazia no dataset Telco.
+
+    Args:
+        df: DataFrame com coluna TotalCharges
+        fill_value: Valor para preencher NaNs (default: 0.0)
+
+    Returns:
+        DataFrame com TotalCharges como float e NaNs preenchidos
+    """
+    df_result = df.copy()
+    df_result["TotalCharges"] = pd.to_numeric(
+        df_result["TotalCharges"],
+        errors="coerce",
+    )
+    df_result["TotalCharges"] = df_result["TotalCharges"].fillna(fill_value)
+    return df_result
+
+
+def one_hot_encode(
+    df: pd.DataFrame,
+    categorical_cols: list[str] | None = None,
+    drop_first: bool = True,
+) -> pd.DataFrame:
+    """Aplica one-hot encoding em colunas categoricas.
+
+    Args:
+        df: DataFrame com colunas categoricas
+        categorical_cols: Lista de colunas a codificar. Se None,
+            detecta automaticamente colunas do tipo object
+        drop_first: Se True, elimina primeira categoria para
+            evitar multicolinearidade
+
+    Returns:
+        DataFrame com colunas categoricas codificadas
+    """
+    if categorical_cols is None:
+        categorical_cols = df.select_dtypes(
+            include=["object"]
+        ).columns.tolist()
+
+    if not categorical_cols:
+        return df.copy()
+
+    return pd.get_dummies(
+        df,
+        columns=categorical_cols,
+        drop_first=drop_first,
+    )
+
+
+def split_features_target(
+    df: pd.DataFrame,
+    target_col: str = "Churn",
+) -> tuple[pd.DataFrame, pd.Series, list[str]]:
+    """Separa DataFrame em features (X) e target (y).
+
+    Args:
+        df: DataFrame com target ja codificado
+        target_col: Nome da coluna target (default: "Churn")
 
     Returns:
         Tupla contendo:
-            - X: Array de features de shape (n_samples, n_features)
-                 sem scaling aplicado
-            - y: Array de targets de shape (n_samples,)
+            - X: DataFrame com features
+            - y: Series com target
             - feature_names: Lista com nomes das features
-                apos one-hot encoding
-            - df_encoded: DataFrame com features codificadas (sem scaling)
-
-    Example:
-        >>> df = pd.read_csv("WA_Fn-UseC_-Telco-Customer-Churn.csv")
-        >>> X, y, features, df_enc = mlp_preprocess_data(df)
-        >>> print(f"Features: {len(features)}")  # ~45 apos one-hot
     """
-    # Remove ID do cliente - nao e uma feature util para predicao
-    df = df.drop(columns=["customerID"])
-
-    # Codifica target: 1 para churn (Yes), 0 para retencao (No)
-    df["Churn"] = df["Churn"].map({"Yes": 1, "No": 0})
-
-    # TotalCharges as vezes vem como string vazia " " - converte para numerico
-    df["TotalCharges"] = pd.to_numeric(df["TotalCharges"], errors="coerce")
-    # Preenche NaNs com 0 - assumindo clientes novos sem historico de cobranca
-    df["TotalCharges"] = df["TotalCharges"].fillna(0.0)
-
-    # Separa colunas categoricas e numericas
-    categorical_cols = df.select_dtypes(include=["object"]).columns.tolist()
-    numerical_cols = df.select_dtypes(
-        include=["int64", "float64"]
-    ).columns.tolist()
-    numerical_cols.remove("Churn")  # Target nao e feature
-
-    # One-hot encoding: converte categorias em colunas binarias
-    df_encoded = pd.get_dummies(df, columns=categorical_cols, drop_first=True)
-
-    # Separa features (X) e target (y)
-    y = np.asarray(df_encoded["Churn"].values, dtype=np.float64)
-    X = np.asarray(df_encoded.drop(columns=["Churn"]).values, dtype=np.float64)
-    feature_names = df_encoded.drop(columns=["Churn"]).columns.tolist()
-
-    return X, y, feature_names, df_encoded
+    X = df.drop(columns=[target_col])
+    y = df[target_col]
+    return X, y, X.columns.tolist()
 
 
 def fit_scaler(X_train: np.ndarray) -> StandardScaler:
@@ -140,3 +176,58 @@ def load_scaler(filepath: str) -> StandardScaler:
         StandardScaler carregado
     """
     return joblib.load(filepath)
+
+
+def mlp_preprocess_data(
+    df: pd.DataFrame,
+) -> tuple[np.ndarray, np.ndarray, list[str], pd.DataFrame]:
+    """Preprocessa o DataFrame bruto do Telco para treino de ML.
+
+    Esta funcao realiza transformacoes necessarias para preparar dados
+    tabulares para uma rede neural. NAO aplica StandardScaler - isso
+    deve ser feito APOS o split treino/teste para evitar data leakage.
+
+    Passos de preprocessamento:
+        1. Remove customerID (nao e uma feature)
+        2. Codifica Churn: "Yes"->1, "No"->0 (target binario)
+        3. Converte TotalCharges para numerico, preenchendo NaNs com 0
+        4. One-hot encoding para variaveis categoricas
+        5. Retorna features nao escaladas (scaling feito separadamente)
+
+    Por que cada passo:
+        - One-hot: Redes neurais requerem entrada numerica
+        - Sem StandardScaler aqui: Evita data leakage - scaler deve ser
+          fitado apenas no conjunto de treino
+        - drop_first=True: Evita multicolinearidade
+
+    Args:
+        df: DataFrame bruto do dataset Telco Customer Churn
+
+    Returns:
+        Tupla contendo:
+            - X: Array de features de shape (n_samples, n_features)
+                 sem scaling aplicado
+            - y: Array de targets de shape (n_samples,)
+            - feature_names: Lista com nomes das features
+                apos one-hot encoding
+            - df_encoded: DataFrame com features codificadas (sem scaling)
+
+    Example:
+        >>> df = pd.read_csv("WA_Fn-UseC_-Telco-Customer-Churn.csv")
+        >>> X, y, features, df_enc = mlp_preprocess_data(df)
+        >>> print(f"Features: {len(features)}")  # ~45 apos one-hot
+    """
+    # Aplica cada etapa de preprocessamento de forma modular
+    df_clean = remove_customer_id(df)
+    df_clean = encode_target(df_clean)
+    df_clean = clean_total_charges(df_clean)
+    df_encoded = one_hot_encode(df_clean)
+
+    # Separa features e target
+    X_df, y_series, feature_names = split_features_target(df_encoded)
+
+    # Converte para arrays numpy
+    X = np.asarray(X_df.values, dtype=np.float64)
+    y = np.asarray(y_series.values, dtype=np.float64)
+
+    return X, y, feature_names, df_encoded
