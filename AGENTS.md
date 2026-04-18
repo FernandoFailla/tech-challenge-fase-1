@@ -14,8 +14,8 @@ ML pipeline for telecom churn prediction. Python 3.12+, PyTorch MLP, scikit-lear
 Three ML pipelines (dummy, MLP, logistic) share common infrastructure but keep experiment-specific code explicit:
 
 **Shared (extracted to modules):**
-- Data loading: `src.data.prepare_telco_dataset.load_telco_data()`
-- Data split: `src.data.splitting.split_train_test_stratified()`
+- Data loading: `src.data.load.load_telco_data()`
+- Data split: `src.data.load.split_train_test_stratified()`
 - MLflow setup: `src.training.mlflow_tracking.setup_mlflow()`, `build_mlflow_inputs()`
 - Metrics: `src.training.metrics.compute_binary_classification_metrics()`
 

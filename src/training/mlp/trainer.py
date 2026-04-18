@@ -22,14 +22,13 @@ from torch.optim.lr_scheduler import ReduceLROnPlateau, StepLR
 from torch.utils.data import DataLoader, TensorDataset
 
 from src.configs.config import TrainingConfig
+from src.constants import THRESHOLD
 from src.training.metrics import compute_binary_classification_metrics
 from src.training.mlp.checkpoint import save_best_model
 from src.training.mlp.early_stopping import EarlyStopping
 from src.training.mlp.model import MLPForTraining
 
 logger = logging.getLogger(__name__)
-
-THRESHOLD: float = 0.5
 
 
 class MLPTrainer:
@@ -160,14 +159,6 @@ class MLPTrainer:
             Histórico de treino com métricas por época:
             {'train_loss': [...], 'val_loss': [...], 'val_f1': [...], ...}
         """
-        # Define seed para reprodutibilidade (PyTorch + NumPy)
-        torch.manual_seed(self.config.random_seed)
-        np.random.seed(self.config.random_seed)
-        if torch.cuda.is_available():
-            torch.cuda.manual_seed_all(self.config.random_seed)
-            torch.backends.cudnn.deterministic = True
-            torch.backends.cudnn.benchmark = False
-
         # Cria split de validacao se nao fornecido
         if X_val is None or y_val is None:
             val_size = int(len(X_train) * self.config.val_split)
@@ -290,7 +281,10 @@ class MLPTrainer:
 
     def _validate(
         self, loader: DataLoader[Any]
-    ) -> tuple[float, dict[str, float]]:
+    ) -> tuple[
+        float,
+        dict[str, float],
+    ]:
         """Executa validação em um epoch.
 
         Args:

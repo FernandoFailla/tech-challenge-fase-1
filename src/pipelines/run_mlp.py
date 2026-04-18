@@ -31,11 +31,14 @@ import pandas as pd
 import torch
 
 from src.configs.config import MLPConfig, TrainingConfig
+
+# Limiar para converter probabilidades em predicoes binarias
 from src.constants import (
     DEFAULT_DATASET_PATH,
     DEFAULT_MLP_EXPERIMENT_NAME,
     RANDOM_SEED,
     TARGET_COLUMN,
+    THRESHOLD,
 )
 from src.data.load import load_telco_data
 from src.data.preprocessing import (
@@ -61,9 +64,6 @@ from src.training.mlflow_tracking import (
 )
 
 logger = logging.getLogger(__name__)
-
-# Limiar para converter probabilidades em predicoes binarias
-THRESHOLD: float = 0.5
 
 
 def main() -> None:  # noqa: PLR0914, PLR0915
@@ -103,6 +103,17 @@ def main() -> None:  # noqa: PLR0914, PLR0915
 
     # Carrega variaveis de ambiente (.env)
     load_dotenv_silent()
+
+    # === SEED GLOBAL PARA REPRODUTIBILIDADE ===
+    # Define seed no inicio do pipeline para garantir reproducibilidade
+    # em todas as operacoes randomicas (split, inicializacao de pesos, etc)
+    logger.info(f"Definindo seed global: {RANDOM_SEED}")
+    torch.manual_seed(RANDOM_SEED)
+    np.random.seed(RANDOM_SEED)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed_all(RANDOM_SEED)
+        torch.backends.cudnn.deterministic = True
+        torch.backends.cudnn.benchmark = False
 
     # Configura MLflow via modulo generico
     experiment_name = get_experiment_name(

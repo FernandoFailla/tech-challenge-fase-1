@@ -11,7 +11,11 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
-from src.constants import DEFAULT_DUMMY_EXPERIMENT_NAME, TARGET_COLUMN
+from src.constants import (
+    DEFAULT_DUMMY_EXPERIMENT_NAME,
+    POSITIVE_LABEL,
+    TARGET_COLUMN,
+)
 from src.data.load import load_telco_data
 from src.data.splitting import split_train_test_stratified
 from src.data.validation import (
@@ -28,8 +32,6 @@ from src.training.mlflow_tracking import MLflowConfig, setup_mlflow
 
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8", errors="ignore")
-
-POSITIVE_LABEL = "Yes"
 
 
 def main() -> int:
