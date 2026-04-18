@@ -61,4 +61,7 @@ logs/
 .ai-jail
 
 # DVC
-.dvc/config
+/.dvc/config
+models/*
+!models/*.dvc
+!models/.gitignore

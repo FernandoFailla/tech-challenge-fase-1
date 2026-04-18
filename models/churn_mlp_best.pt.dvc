@@ -1,0 +1,5 @@
+outs:
+- md5: e5f424eebc8de934aeb4ba7a19bb14f8
+  size: 69289
+  hash: md5
+  path: churn_mlp_best.pt

@@ -1,3 +1,9 @@
+"""Testes para o pipeline Dummy Baseline.
+
+Testa a orquestração do pipeline e a integração com
+o módulo de treinamento de dummy classifiers.
+"""
+
 from __future__ import annotations
 
 import os
@@ -6,17 +12,11 @@ from typing import Self
 import pandas as pd
 import pytest
 
-from src.data.splitting import (
-    split_train_test_stratified,
-)
-from src.data.validation import (
-    validate_required_columns,
-)
-from src.pipelines.run_dummy_baseline import (
-    PipelineConfig,
-    main,
-    run_all_strategies,
-)
+from src.data.splitting import split_train_test_stratified
+from src.data.validation import validate_required_columns
+from src.pipelines.run_dummy_baseline import main
+from src.training import DummyTrainingConfig
+from src.training.dummy_trainer import run_all_strategies
 from src.training.metrics import compute_binary_classification_metrics
 from src.training.mlflow_tracking import MLflowConfig, setup_mlflow
 
@@ -39,7 +39,7 @@ def make_dummy_df() -> pd.DataFrame:
 def test_split_data_returns_expected_sizes() -> None:
     """Split deve retornar conjuntos com tamanhos consistentes."""
     df = make_dummy_df()
-    config = PipelineConfig(test_size=0.5, random_seed=42)
+    config = DummyTrainingConfig(test_size=0.5, random_seed=42)
 
     X_train, X_test, y_train, y_test = split_train_test_stratified(
         df,
@@ -80,7 +80,7 @@ def test_compute_metrics_returns_all_expected_keys() -> None:
 def test_run_all_strategies_returns_three_rows(monkeypatch: object) -> None:
     """Pipeline deve produzir 3 resultados, um por estratégia dummy."""
     df = make_dummy_df()
-    config = PipelineConfig(test_size=0.5, random_seed=42)
+    config = DummyTrainingConfig(test_size=0.5, random_seed=42)
     X_train, X_test, y_train, y_test = split_train_test_stratified(
         df,
         config.target_column,
@@ -88,15 +88,7 @@ def test_run_all_strategies_returns_three_rows(monkeypatch: object) -> None:
         config.random_seed,
     )
 
-    monkeypatch.setattr(
-        "src.pipelines.run_dummy_baseline.setup_mlflow",
-        lambda _: None,
-    )
-    monkeypatch.setattr(
-        "src.pipelines.run_dummy_baseline.build_mlflow_inputs",
-        lambda *args, **kwargs: (object(), object()),
-    )
-
+    # Mock do MLflow
     class _DummyRun:
         def __enter__(self) -> Self:
             return self
@@ -105,33 +97,29 @@ def test_run_all_strategies_returns_three_rows(monkeypatch: object) -> None:
             return None
 
     monkeypatch.setattr(
-        "src.pipelines.run_dummy_baseline.mlflow.start_run",
+        "src.training.dummy_trainer.mlflow.start_run",
         lambda run_name=None: _DummyRun(),
     )
     monkeypatch.setattr(
-        "src.pipelines.run_dummy_baseline.mlflow.log_param",
+        "src.training.dummy_trainer.mlflow.log_param",
         lambda *args, **kwargs: None,
     )
     monkeypatch.setattr(
-        "src.pipelines.run_dummy_baseline.mlflow.set_tag",
+        "src.training.dummy_trainer.mlflow.set_tag",
         lambda *args, **kwargs: None,
     )
     monkeypatch.setattr(
-        "src.pipelines.run_dummy_baseline.mlflow.log_metric",
+        "src.training.dummy_trainer.mlflow.log_metric",
         lambda *args, **kwargs: None,
     )
-    monkeypatch.setattr(
-        "src.pipelines.run_dummy_baseline.mlflow.log_input",
-        lambda *args, **kwargs: None,
-    )
-    monkeypatch.setattr(
-        "src.pipelines.run_dummy_baseline.mlflow.log_artifact",
-        lambda *args, **kwargs: None,
-    )
+
     results_df = run_all_strategies(
-        (X_train, X_test, y_train, y_test),
+        X_train,
+        X_test,
+        y_train,
+        y_test,
         config,
-        MLflowConfig(),
+        dataset_version="abc123",
     )
 
     assert len(results_df) == EXPECTED_SIZE
@@ -180,6 +168,10 @@ def test_main_returns_zero_with_monkeypatched_flow(
     monkeypatch.setattr(
         "src.pipelines.run_dummy_baseline.load_telco_data",
         lambda: df,
+    )
+    monkeypatch.setattr(
+        "src.pipelines.run_dummy_baseline.setup_mlflow",
+        lambda _: None,
     )
     monkeypatch.setattr(
         "src.pipelines.run_dummy_baseline.run_all_strategies",

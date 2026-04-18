@@ -186,3 +186,6 @@ with mlflow.start_run():
 - Lock file: `uv.lock` (must be committed)
 
 Key deps: fastapi, pandas, scikit-learn, torch, mlflow, pytest, ruff, mypy
+
+## Important
+- Always run make test and make lint after any code update

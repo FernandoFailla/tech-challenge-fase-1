@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import os
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 import mlflow
 import numpy as np
@@ -15,10 +15,16 @@ DEFAULT_DATASET_SOURCE_PATH = "data/raw/WA_Fn-UseC_-Telco-Customer-Churn.csv"
 
 @dataclass(frozen=True)
 class MLflowConfig:
-    """Configuração de tracking do MLflow."""
+    """Configuração de tracking do MLflow.
 
-    tracking_uri: str = os.getenv(
-        "MLFLOW_TRACKING_URI", "http://localhost:5000"
+    Usa default_factory para lazy evaluation, garantindo que
+    as variáveis de ambiente sejam lidas após carregar o .env.
+    """
+
+    tracking_uri: str = field(
+        default_factory=lambda: os.getenv(
+            "MLFLOW_TRACKING_URI", "http://localhost:5000"
+        )
     )
     experiment_name: str = "tech-challenge-default"
 
@@ -44,7 +50,7 @@ def setup_mlflow(config: MLflowConfig) -> None:
     mlflow.set_experiment(config.experiment_name)
 
     tracking_uri = config.tracking_uri
-    if "localhost:5000" in tracking_uri:
+    if "localhost" in tracking_uri:
         os.environ.setdefault(
             "MLFLOW_S3_ENDPOINT_URL", "http://localhost:9000"
         )
