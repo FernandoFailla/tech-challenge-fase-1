@@ -4,7 +4,7 @@ import pytest
 import torch
 
 from src.configs.config import MLPConfig
-from src.training.mlp import MLP, MLPForTraining
+from src.training import MLP, MLPForTraining
 
 
 @pytest.mark.fast

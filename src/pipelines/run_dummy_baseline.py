@@ -12,7 +12,7 @@ import sys
 from pathlib import Path
 
 from src.constants import DEFAULT_DUMMY_EXPERIMENT_NAME, TARGET_COLUMN
-from src.data.prepare_telco_dataset import load_telco_data
+from src.data.load import load_telco_data
 from src.data.splitting import split_train_test_stratified
 from src.data.validation import (
     validate_binary_target,

@@ -3,7 +3,7 @@ from unittest.mock import patch
 import pandas as pd  # type: ignore[import-untyped]
 import pytest
 
-from src.data.prepare_telco_dataset import load_telco_data
+from src.data.load import load_telco_data
 
 
 def test_load_telco_data_success() -> None:
@@ -11,7 +11,7 @@ def test_load_telco_data_success() -> None:
     mock_df = pd.DataFrame({"customerID": ["1", "2"], "Churn": ["Yes", "No"]})
 
     with patch(
-        "src.data.prepare_telco_dataset.pd.read_csv", return_value=mock_df
+        "src.data.load.pd.read_csv", return_value=mock_df
     ) as mock_read_csv:
         result = load_telco_data("dummy/path.csv")
 
@@ -23,7 +23,7 @@ def test_load_telco_data_file_not_found() -> None:
     """Test file not found exception handling."""
     with (
         patch(
-            "src.data.prepare_telco_dataset.pd.read_csv",
+            "src.data.load.pd.read_csv",
             side_effect=FileNotFoundError,
         ),
         pytest.raises(FileNotFoundError, match="não encontrado"),

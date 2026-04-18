@@ -5,14 +5,11 @@ from src.training.dummy_trainer import (
     run_all_strategies,
     train_dummy_strategy,
 )
-from src.training.early_stopping import EarlyStopping
-from src.training.mlp import MLP, MLPForTraining
-from src.training.mlp_trainer import MLPTrainer
+from src.training.mlp import MLP, MLPForTraining, MLPTrainer
 
 __all__ = [
     "MLP",
     "DummyTrainingConfig",
-    "EarlyStopping",
     "MLPForTraining",
     "MLPTrainer",
     "run_all_strategies",

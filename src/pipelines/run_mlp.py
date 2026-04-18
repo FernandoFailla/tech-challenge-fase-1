@@ -37,7 +37,7 @@ from src.constants import (
     RANDOM_SEED,
     TARGET_COLUMN,
 )
-from src.data.prepare_telco_dataset import load_telco_data
+from src.data.load import load_telco_data
 from src.data.preprocessing import (
     apply_scaling,
     fit_scaler,
@@ -51,7 +51,7 @@ from src.pipelines.common import (
     load_dotenv_silent,
     safe_get_dataset_version,
 )
-from src.training import MLPTrainer
+from src.training import MLPForTraining, MLPTrainer
 from src.training.metrics import compute_binary_classification_metrics
 from src.training.mlflow_tracking import (
     MLflowConfig,
@@ -59,7 +59,6 @@ from src.training.mlflow_tracking import (
     build_mlflow_inputs,
     setup_mlflow,
 )
-from src.training.mlp import MLPForTraining
 
 logger = logging.getLogger(__name__)
 

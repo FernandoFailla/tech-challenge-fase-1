@@ -6,8 +6,7 @@ import numpy as np
 import pytest
 
 from src.configs.config import MLPConfig, TrainingConfig
-from src.training import MLPTrainer
-from src.training.mlp import MLPForTraining
+from src.training import MLPForTraining, MLPTrainer
 
 
 @pytest.mark.slow
