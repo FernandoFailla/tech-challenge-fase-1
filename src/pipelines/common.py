@@ -60,11 +60,6 @@ def get_experiment_name(
     if env_value:
         return env_value
 
-    # Tenta variável genérica
-    generic_value = os.getenv("MLFLOW_EXPERIMENT_NAME")
-    if generic_value:
-        return generic_value
-
     return default_name
 
 

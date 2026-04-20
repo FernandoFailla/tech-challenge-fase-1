@@ -162,7 +162,7 @@ cp .env.example .env          # Then edit with your values
 Key env vars:
 - `MLFLOW_TRACKING_URI=http://localhost:5000`
 - `MLFLOW_S3_ENDPOINT_URL=http://localhost:9000`
-- `MLFLOW_EXPERIMENT_NAME=tech-challenge-default`
+- `MLFLOW_DUMMY_EXPERIMENT_NAME=tech-challenge-dummy-baseline`
 - `DVC_ONEDRIVE_REMOTE_URL=` (set during `make setup`)
 
 ## MLflow Integration

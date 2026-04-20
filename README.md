@@ -155,7 +155,7 @@ MLFLOW_TRACKING_URI=http://localhost:5000
 MLFLOW_S3_ENDPOINT_URL=http://localhost:9000
 AWS_ACCESS_KEY_ID=minioadmin
 AWS_SECRET_ACCESS_KEY=minioadmin_secret_key_2024
-MLFLOW_EXPERIMENT_NAME=tech-challenge-default
+MLFLOW_DUMMY_EXPERIMENT_NAME=tech-challenge-dummy-baseline
 ```
 
 > Security: nunca versionar o arquivo `.env` com credenciais reais.
