@@ -155,10 +155,10 @@ MLFLOW_TRACKING_URI=http://localhost:5000
 MLFLOW_S3_ENDPOINT_URL=http://localhost:9000
 AWS_ACCESS_KEY_ID=minioadmin
 AWS_SECRET_ACCESS_KEY=minioadmin_secret_key_2024
-MLFLOW_EXPERIMENT_NAME=tech-challenge-default
+MLFLOW_DUMMY_EXPERIMENT_NAME=tech-challenge-dummy-baseline
 ```
 
-> 🔒 Segurança: nunca versionar o arquivo `.env` com credenciais reais.
+> Security: nunca versionar o arquivo `.env` com credenciais reais.
 
 ## Comandos básicos
 
@@ -188,6 +188,42 @@ make setup        # Configurar ambiente (uv sync + pre-commit)
 make docker-up    # Iniciar MLflow em background (requer .env)
 make docker-down  # Parar todos os containers MLflow
 ```
+
+### Treinamento do Modelo MLP
+
+Para treinar o modelo MLP (Multi-Layer Perceptron) com PyTorch:
+
+**Pré-requisitos:**
+- Arquivo `.env` configurado (veja seção "Configuração de Variáveis de Ambiente")
+- MLflow rodando localmente (`make docker-up`)
+- Dataset Telco no caminho `data/raw/WA_Fn-UseC_-Telco-Customer-Churn.csv`
+
+**Executar treino:**
+
+```bash
+# Opção 1: Usando o Makefile (recomendado)
+make train
+
+# Opção 2: Executando diretamente com uv
+uv run python -m src.pipelines.train_mlp
+
+# Opção 3: Com argumentos customizados
+uv run python -m src.pipelines.train_mlp \
+    --input data/raw/WA_Fn-UseC_-Telco-Customer-Churn.csv \
+    --experiment-name churn-mlp-v1
+```
+
+**O que o treino faz:**
+1. Carrega e pré-processa os dados (one-hot encoding, padronização)
+2. Divide em treino/teste (80/20) com estratificação
+3. Treina MLP com arquitetura configurável (padrão: 128→64→32 neurônios)
+4. Aplica early stopping e learning rate scheduling
+5. Registra métricas e modelo no MLflow
+6. Salva o melhor modelo em `models/churn_mlp_best.pt`
+
+**Métricas geradas:**
+- Acurácia, Precisão, Recall, F1-Score, AUC-ROC
+- Visualização no MLflow UI (http://localhost:5000)
 
 ### Desenvolvimento
 
@@ -224,7 +260,7 @@ Marcos críticos:
 
 ## Boas práticas e módulos previstos (baseado na Issue #3)
 
-> ✅ **Status:** esta seção descreve direcionadores e componentes **previstos** para evolução do projeto.
+> [OK] **Status:** esta seção descreve direcionadores e componentes **previstos** para evolução do projeto.
 
 Boas práticas de engenharia previstas:
 

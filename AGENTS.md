@@ -1,181 +1,191 @@
-# AGENTS.md - Diretrizes de Codificação para TechChallenge1ChurnTelco
+# AGENTS.md - TechChallenge1ChurnTelco
 
-Este arquivo fornece informações essenciais para agentes de IA que trabalham neste projeto de ML.
+ML pipeline for telecom churn prediction. Python 3.12+, PyTorch MLP, scikit-learn baselines, MLflow tracking, FastAPI inference.
 
-## Visão Geral do Projeto
+## Philosophy: Simplicity First
 
-Este é um projeto de machine learning em Python 3.12+ para o Tech Challenge da pós-graduação MLE da FIAP. Utiliza MLflow para rastreamento de experimentos, FastAPI para serviço e scikit-learn para modelagem.
+- **Prefer simple solutions** - avoid over-engineering
+- **Question every addition** - does this really need to be added?
+- **Function over form** - working code beats perfect architecture
+- **Less is more** - fewer lines, fewer files, fewer dependencies
 
-## Filosofia Central: Simplicidade em Primeiro Lugar
+### Code Sharing Between Experiments
 
-**O código deve ser sempre simples, conciso e funcional.**
+Three ML pipelines (dummy, MLP, logistic) share common infrastructure but keep experiment-specific code explicit:
 
-Ao adicionar ou alterar qualquer coisa:
-- **Prefira simplicidade** - Evite engenharia excessiva e complexidade desnecessária
-- **Faça o mínimo** - Planeje escrever apenas o necessário para resolver o problema
-- **Seja direto** - Sem enfeites, sem abstrações desnecessárias, sem recursos "só por precaução"
-- **Função sobre forma** - Código funcionando vence arquitetura perfeita
-- **Menos é mais** - Menos linhas, menos arquivos, menos dependências = melhor
-- **Questione cada adição** - Isso realmente precisa ser adicionado? Pode ser mais simples?
+**Shared (extracted to modules):**
+- Data loading: `src.data.load.load_telco_data()`
+- Data split: `src.data.load.split_train_test_stratified()`
+- MLflow setup: `src.training.mlflow_tracking.setup_mlflow()`, `build_mlflow_inputs()`
+- Metrics: `src.training.metrics.compute_binary_classification_metrics()`
 
-**Exemplos do que evitar:**
-- Hierarquias de classes complexas quando funções bastam
-- Camadas de abstração que não fornecem valor imediato
-- "Frameworks" genéricos para tarefas simples
-- Preparação para cenários hipotéticos futuros
-- Código boilerplate que não adiciona funcionalidade
+**Duplicated OK (kept per-pipeline for clarity):**
+- Model-specific param logging (each model logs different values)
+- Preprocessing (Dummy uses strings, MLP uses numeric tensors)
+- Results post-processing (CSV comparison vs torch model saving)
+- CLI argument parsing (only where needed)
 
-**Em caso de dúvida, escolha a opção mais simples.**
+**Rule:** Extract helpers only when genuinely identical AND extraction does not increase abstraction complexity. Prefer explicit duplication over clever abstractions.
 
-## Comandos de Build/Lint/Test
+## Commands
 
-Todos os comandos usam `uv` como gerenciador de pacotes:
+Uses `uv` as package manager. Always prefix Python commands with `uv run`.
 
 ```bash
-# Configuração do ambiente
-make setup                    # Instalar deps e hooks do pre-commit
-uv sync                       # Instalar todas as dependências
-uv sync --no-dev             # Apenas produção (CI/Docker)
+# Setup
+make setup                    # uv sync + pre-commit install + DVC setup
+uv sync                       # Install deps (add --no-dev for CI/Docker)
 
-# Testes
-make test                     # Executar todos os testes com cobertura
-uv run pytest tests/ -v      # Executar todos os testes (verbose)
-uv run pytest tests/test_file.py -v              # Arquivo de teste único
-uv run pytest tests/test_file.py::test_func -v   # Função de teste única
-uv run pytest -m fast -v     # Executar apenas testes rápidos
-uv run pytest -m slow -v     # Executar apenas testes de integração
+# Testing (80% coverage minimum enforced)
+make test                     # Full test suite with coverage
+uv run pytest tests/ -v       # Run all tests
+uv run pytest -m fast -v      # Quick tests only
+uv run pytest -m slow -v      # Integration tests only
 
-# Requisitos de cobertura: 80% mínimo em src/
-# Configuração de cobertura está em pyproject.toml
+# Quality
+make lint                     # Check with ruff
+make format                   # Format with ruff
+uv run mypy src/              # Type check (strict mode)
 
-# Linting e Formatação
-make lint                    # Verificar código com ruff
-make format                  # Formatar código com ruff
-uv run ruff check .          # Verificação manual de lint
-uv run ruff check . --fix    # Auto-corrigir problemas
-uv run ruff format .         # Formatação manual
-
-# Verificação de Tipos
-uv run mypy src/             # Verificar tipos (modo estrito habilitado)
-
-# Pre-commit
-uv run pre-commit run --all-files     # Executar todos os hooks
-uv run pre-commit run ruff --all-files # Executar hook específico
-
-# MLflow (Docker)
-make docker-up               # Iniciar MLflow + PostgreSQL + MinIO
-docker-compose -f docker/docker-compose.yml up -d
-make docker-down             # Parar todos os containers
+# MLflow (requires .env)
+make docker-up                # Start MLflow + PostgreSQL + MinIO
+make docker-down              # Stop containers
 ```
 
-## Diretrizes de Estilo de Código
+## ML Experiments
 
-### Versão do Python e Imports
-- Use recursos do Python 3.12+ (requires-python = ">=3.12,<3.14")
-- Sempre use `from __future__ import annotations` no topo
-- Ordem de imports: stdlib → terceiros → locais (imposto pela regra I do ruff)
-- Use `TYPE_CHECKING` para imports necessários apenas para type hints
+Three baseline experiments tracked in MLflow:
 
-### Type Hints (Estrito)
-- **Todas as funções devem ter type hints** (`disallow_untyped_defs = true`)
-- Use sintaxe moderna: `list[str]`, `dict[str, Any]`, `str | None`
-- Use `NDArray[Any]` de `numpy.typing` para tipos de array
-- Use Protocols para definições de interfaces
+| Experiment | Command | Status |
+|------------|---------|--------|
+| Dummy Baseline | `make train-dummy` or `uv run python -m src.pipelines.run_dummy_baseline` | Ready |
+| MLP | `make train-mlp` or `uv run python -m src.pipelines.run_mlp` | Ready |
+| Logistic Regression | `make train-logistic` (planned) | Future |
 
-### Formatação
-- Comprimento de linha: **79 caracteres** (padrão PEP 8)
-- Use ruff tanto para linting quanto para formatação
-- Regras do Ruff habilitadas: I (imports), F (Pyflakes), E/W (pycodestyle), PL (pylint), PT (pytest)
+All experiments share:
+- Data loading: `src.data.prepare_telco_dataset.load_telco_data()`
+- Split: `src.data.splitting.split_train_test_stratified()`
+- MLflow setup: `src.training.mlflow_tracking.setup_mlflow()`
+- Metrics: `src.training.metrics.compute_binary_classification_metrics()`
 
-### Convenções de Nomenclatura
-- Classes: `PascalCase` (ex: `ExperimentRunner`, `ModelConfig`)
-- Funções/variáveis: `snake_case` (ex: `run_experiment`, `model_name`)
-- Constantes: `UPPER_CASE` (ex: `HTTP_OK`, `DEFAULT_PORT`)
-- Privadas: `_leading_underscore` para uso interno
-- Enums: Use `auto()` para valores quando apropriado
+## Code Style (Strict)
 
-### Estrutura do Código
-- Use `@dataclass` para objetos de configuração (prefira `frozen=True`)
-- Use `@dataclass` para entidades com `field(default_factory=list)` para padrões mutáveis
-- Use Protocols para injeção de dependência e interfaces
-- Prefira métodos estáticos em classes de treino/utilitárias
-- Organize imports: stdlib, terceiros, locais com linhas em branco entre eles
+- **Line length:** 79 characters (not 88)
+- **Python:** 3.12+ with `from __future__ import annotations` always
+- **Type hints:** Required on all functions (`disallow_untyped_defs = true`)
+- **Import order:** stdlib → third-party → local (enforced by ruff I rule)
+- **Use `TYPE_CHECKING`** for imports only needed for type hints
 
-### Tratamento de Erros
-- Use exceções específicas quando possível
-- Use `try/except` com context managers
-- Registre erros apropriadamente usando o módulo logging
-- Para erros esperados: `except SpecificException as e:`
-- Para captura geral (use com moderação): `except Exception as e:  # noqa: BLE001`
-- Retorne status booleano para funções de validação
+### Patterns
 
-### Documentação
-- Todos os módulos precisam de docstrings com aspas triplas
-- Todas as funções públicas precisam de docstrings
-- Use docstrings no estilo Google ou padrão
-- Adicione type hints em vez de documentar tipos nas docstrings
+```python
+# Dataclasses for config
+@dataclass(frozen=True)
+class Config:
+    value: str
 
-### Testes
-- Arquivos de teste: `tests/test_*.py`
-- Marcadores de teste: `@pytest.mark.fast` para testes rápidos, `@pytest.mark.slow` para integração
-- Cobertura mínima: 80% em `src/`
-- Use fixtures do pytest para setup compartilhado
-- Mock serviços externos (MLflow, bancos de dados) em testes unitários
+# Protocols for interfaces
+class Trainer(Protocol):
+    def train(self, data: Data) -> Model: ...
 
-### Integração MLflow
-- Carregue config do ambiente usando `MLflowConfig.from_env()`
-- Use `python-dotenv` para suporte a arquivo `.env`
-- Sempre use context managers: `with mlflow.start_run():`
-- Registre params com `mlflow.log_param()`, métricas com `mlflow.log_metric()`
-- Registre modelos com flavor apropriado: `mlflow.sklearn.log_model()`
+# Error handling
+except SpecificException as e:  # Be specific
+except Exception as e:  # noqa: BLE001  # Rare, mark with noqa
+```
 
-### Regras de Estrutura do Projeto
-- **SEM artefatos em notebooks** - notebooks são apenas para exploração
-- Artefatos finais (modelos, datasets) vão em `src/pipelines/` como scripts parametrizados
-- Dados vão em `data/`, modelos em `models/`, docs em `docs/`
-- Código fonte organizado: `api/`, `data/`, `features/`, `training/`, `inference/`, `pipelines/`, `schemas/`
+## Project Structure
 
-### Gerenciamento de Ambiente
-- Use arquivo `.env` para configuração local (copie de `.env.example`)
-- Nunca commite arquivos `.env`
-- Use `python-dotenv` para carregar variáveis de ambiente
-- Docker Compose usa arquivo `.env` automaticamente
-
-### Dependências
-- Deps de produção: listadas em `[project] dependencies`
-- Deps de dev: listadas em `[dependency-groups] dev`
-- Use `uv add <package>` para adicionar dependências de produção
-- Use `uv add --dev <package>` para adicionar dependências de dev
-- Arquivo de lock `uv.lock` deve ser commitado
-
-### Fluxo de Trabalho Git
-- Hooks do pre-commit rodam automaticamente no commit
-- CI corrige automaticamente PRs com pre-commit
-- Use mensagens de commit convencionais
-
-## Arquitetura do Projeto
-
-### Estrutura de Diretórios
 ```
 src/
-├── api/           # Aplicação FastAPI e endpoints
-├── data/          # Carregamento e validação de dados
-├── eda/           # Ferramentas de análise exploratória de dados
-├── features/      # Pipelines de engenharia de features
-├── inference/     # Serviço de modelo e predição
-├── pipelines/     # Pipelines de treino end-to-end
-├── schemas/       # Modelos Pydantic e contratos de dados
-└── training/      # Treino e avaliação de modelo
-data/              # Datasets brutos e processados
-models/            # Artefatos de modelo salvos
-tests/             # Testes unitários e de integração
-notebooks/         # Notebooks Jupyter para exploração
-docs/              # Documentação e relatórios
+├── api/           # FastAPI (empty - .gitkeep)
+├── data/          # Data loading (empty - .gitkeep)
+├── eda/           # EDA helpers (empty - .gitkeep)
+├── features/      # Feature pipelines (empty - .gitkeep)
+├── inference/     # Prediction service (empty - .gitkeep)
+├── pipelines/     # End-to-end scripts (empty - .gitkeep)
+├── schemas/       # Pydantic models (empty - .gitkeep)
+└── training/      # Model training (empty - .gitkeep)
+
+data/              # DVC-tracked datasets
+├── raw/           # Original data
+└── processed/     # Transformed data
+
+models/            # Saved model artifacts
+tests/             # pytest tests (test_*.py)
+notebooks/         # Exploration only - NO artifacts
+docs/              # Documentation
 ```
 
-### Padrões de Design Principais
-- **Configuration as Code**: Use dataclasses para todos os objetos de configuração
-- **Protocol-based Interfaces**: Defina contratos com typing.Protocol
-- **Static Methods**: Prefira `@staticmethod` para funções utilitárias
-- **Context Managers**: Use instruções `with` para gerenciamento de recursos
-- **Immutable Data**: Use `frozen=True` em dataclasses quando possível
+## Critical Rules
+
+1. **NO artifacts from notebooks** - notebooks are exploration only; final artifacts must come from `src/pipelines/` scripts
+2. **All code needs type hints** - mypy runs in strict mode
+3. **Coverage minimum 80%** - enforced in CI via pyproject.toml
+4. **Test markers:** `@pytest.mark.fast` for quick tests, `@pytest.mark.slow` for integration
+5. **NO emojis anywhere** - use ASCII text equivalents (see Text Style section below)
+6. **NO unrequested documentation** - do not create .md files, CHANGELOGs, or docs unless explicitly asked
+7. **NO deprecated code** - if code is not used, remove it; do not keep "for future use" or "backward compatibility"
+
+## Text and Documentation Style
+
+**NO emojis in any file** - this includes source code, documentation, comments, commit messages, and shell scripts. Use ASCII text equivalents:
+
+| Instead of | Use |
+|------------|-----|
+| Checkmark | `[OK]`, `Success:`, `Done:` |
+| Cross | `[ERROR]`, `Error:` |
+| Warning | `[WARN]`, `Warning:` |
+| Whale | `Docker:` |
+| Rocket | `Starting...`, `Launching...` |
+| Lightbulb | `Tip:`, `Note:` |
+| Chart | `Results:`, `Metrics:` |
+| Target | `Goal:`, `Next:` |
+| Wrench | `Config:`, `Setup:` |
+| Folder | `Directory:`, `Folder:` |
+| Clipboard | `List:`, `Summary:` |
+
+**NO emoji in:**
+- Source code (Python files)
+- Documentation (README, AGENTS.md, etc)
+- Comments (inline or block)
+- Commit messages
+- Shell scripts (Makefile, .sh files)
+- Configuration files
+
+## Environment Setup
+
+```bash
+# Required before running MLflow or pipeline scripts
+cp .env.example .env          # Then edit with your values
+```
+
+Key env vars:
+- `MLFLOW_TRACKING_URI=http://localhost:5000`
+- `MLFLOW_S3_ENDPOINT_URL=http://localhost:9000`
+- `MLFLOW_DUMMY_EXPERIMENT_NAME=tech-challenge-dummy-baseline`
+- `DVC_ONEDRIVE_REMOTE_URL=` (set during `make setup`)
+
+## MLflow Integration
+
+```python
+from dotenv import load_dotenv
+import mlflow
+
+load_dotenv()
+
+with mlflow.start_run():
+    mlflow.log_param("lr", 0.01)
+    mlflow.log_metric("accuracy", 0.95)
+    mlflow.sklearn.log_model(model, "model")
+```
+
+## Dependencies
+
+- Add prod: `uv add <package>`
+- Add dev: `uv add --dev <package>`
+- Lock file: `uv.lock` (must be committed)
+
+Key deps: fastapi, pandas, scikit-learn, torch, mlflow, pytest, ruff, mypy
+
+## Important
+- Always run make test and make lint after any code update

@@ -1,12 +1,12 @@
 # Makefile para o TechChallenge Fase 1
 # Comandos essenciais para desenvolvimento
 
-.PHONY: setup test lint format help docker-up docker-down
+.PHONY: setup test lint format help docker-up docker-down train train-dummy train-mlp train-logistic
 
 # Verifica se o arquivo .env existe
 CHECK_ENV := $(shell test -f .env && echo 1 || echo 0)
 ifeq ($(CHECK_ENV),0)
-  ENV_ERROR = @echo "❌ ERRO: Arquivo .env não encontrado!" && echo "👉 Copie .env.example para .env:" && echo "   cp .env.example .env" && echo "" && exit 1
+  ENV_ERROR = @echo "[ERROR] ERRO: Arquivo .env não encontrado!" && echo "Tip: Copie .env.example para .env:" && echo "   cp .env.example .env" && echo "" && exit 1
 endif
 
 # Help padrao
@@ -24,6 +24,12 @@ help:
 	@echo "  make test       - Rodar testes"
 	@echo "  make lint       - Verificar codigo com ruff"
 	@echo "  make format     - Formatar codigo com ruff"
+	@echo ""
+	@echo "ML:"
+	@echo "  make train      - Treinar todos os modelos (requer .env + MLflow)"
+	@echo "  make train-dummy - Treinar baseline DummyClassifier"
+	@echo "  make train-mlp  - Treinar modelo MLP (requer .env + MLflow)"
+	@echo "  make train-logistic - Treinar modelo Logistic Regression (futuro)"
 	@echo ""
 
 # Setup inicial
@@ -50,10 +56,10 @@ setup:
 		URL="$$user_input"; \
 	fi; \
 	if [ -n "$$URL" ]; then \
-		dvc remote modify onedrive_remote url "$$URL"; \
-		echo "✅ DVC remote configurado para: $$URL"; \
+		dvc remote add -d onedrive_remote "$$URL"; \
+		echo "[OK] DVC remote configurado para: $$URL"; \
 	else \
-		echo "⚠️ Aviso: URL remota do DVC nao definida."; \
+		echo "[WARN] Aviso: URL remota do DVC nao definida."; \
 	fi
 	@echo "Setup concluido!"
 
@@ -75,12 +81,42 @@ format:
 # Iniciar Docker em background
 docker-up:
 	$(ENV_ERROR)
-	@echo "🐳 Iniciando MLflow em background..."
+	@echo "Docker: Iniciando MLflow em background..."
 	docker compose -f docker/docker-compose.yml --env-file .env up -d
-	@echo "✅ MLflow iniciado! Acesse http://localhost:$$(grep -E '^MLFLOW_PORT=' .env | cut -d '=' -f2) para usar."
+	@echo "[OK] MLflow iniciado! Acesse http://localhost:$$(grep -E '^MLFLOW_PORT=' .env | cut -d '=' -f2) para usar."
 
 # Parar Docker
 docker-down:
-	@echo "🛑 Parando containers MLflow..."
+	@echo "[STOP] Pararando containers MLflow..."
 	docker compose -f docker/docker-compose.yml --env-file .env down
-	@echo "✅ Containers parados!"
+	@echo "[OK] Containers parados!"
+
+# Treinar todos os modelos
+train:
+	$(ENV_ERROR)
+	@echo "Treinando todos os modelos..."
+	make train-dummy
+	make train-mlp
+	@echo "Todos os treinamentos concluidos!"
+
+# Treinar baseline DummyClassifier
+train-dummy:
+	$(ENV_ERROR)
+	@echo "Treinando baseline DummyClassifier..."
+	uv run python -m src.pipelines.run_dummy_baseline
+	@echo "Baseline DummyClassifier concluido!"
+
+# Treinar modelo MLP
+train-mlp:
+	$(ENV_ERROR)
+	@echo "Treinando modelo MLP..."
+	uv run python -m src.pipelines.run_mlp
+	@echo "Treinamento MLP concluido!"
+
+# Futuro: Treinar modelo Logistic Regression
+train-logistic:
+	$(ENV_ERROR)
+	@echo "Treinando modelo Logistic Regression..."
+	@echo "[WARN] Modelo ainda em desenvolvimento"
+	@echo "Proximo passo: criar src/pipelines/train_logistic.py"
+	@echo "Treinamento Logistic Regression concluido!"
