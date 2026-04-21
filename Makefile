@@ -56,7 +56,7 @@ setup:
 		URL="$$user_input"; \
 	fi; \
 	if [ -n "$$URL" ]; then \
-		dvc remote modify onedrive_remote url "$$URL"; \
+		dvc remote add -d onedrive_remote "$$URL"; \
 		echo "[OK] DVC remote configurado para: $$URL"; \
 	else \
 		echo "[WARN] Aviso: URL remota do DVC nao definida."; \
