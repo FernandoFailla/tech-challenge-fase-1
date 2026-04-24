@@ -1,6 +1,6 @@
 # Tech Challenge — Fase 1
 
-[![Open EDA in molab](https://marimo.io/molab-shield.svg)](https://molab.marimo.io/github/G13-MLE/tech-challenge-fase-1/blob/treino/ygor-issue-17-eda-chur/notebooks/01_eda.py/wasm)
+[![Open EDA](https://img.shields.io/badge/Open-EDA%20Notebook-blue)](https://g13-mle.github.io/tech-challenge-fase-1/)
 
 Pipeline end-to-end de ML para previsão de churn em telecomunicações — MLP com PyTorch, baselines Scikit-Learn, rastreamento com MLflow e API de inferência com FastAPI. Tech Challenge Fase 1 · PÓS TECH FIAP.
 
