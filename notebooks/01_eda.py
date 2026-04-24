@@ -1,6 +1,6 @@
 import marimo
 
-__generated_with = "0.23.2"
+__generated_with = "0.23.3"
 app = marimo.App(width="columns")
 
 
@@ -10,6 +10,7 @@ def _(mo):
     # 📊 Resumo Executivo
     Visão geral dos principais insights acionáveis descobertos durante a Análise Exploratória, focados em **Estratégia de Negócio** e **Modelagem Preditiva**.
     """)
+    return
 
 
 @app.cell(hide_code=True)
@@ -22,6 +23,7 @@ def _(mo):
         """),
         kind="warn",
     )
+    return
 
 
 @app.cell(hide_code=True)
@@ -42,6 +44,7 @@ def _(mo):
         """),
         }
     )
+    return
 
 
 @app.cell(hide_code=True)
@@ -95,6 +98,7 @@ def _(mo, plt):
             fig_exec,
         ]
     )
+    return
 
 
 @app.cell(hide_code=True)
@@ -104,6 +108,7 @@ def _(mo):
 
     **Quanto mais vermelho/intenso, maior a taxa de cancelamento.**
     """)
+    return
 
 
 @app.cell(hide_code=True)
@@ -146,6 +151,7 @@ def _(df_eda, pd, plt, sns):
 
     plt.tight_layout()
     plt.show()
+    return
 
 
 @app.cell(hide_code=True)
@@ -158,6 +164,7 @@ def _(mo):
     - **🟢 Zona Segura (Veterano + Qualquer ticket):** Após 4 anos, o cliente está "preso" à operadora. O churn despenca independente do valor pago. O foco deve ser upsell, não retenção.
     - **💡 Ação Imediata para Diretoria:** Priorizar 100% da verba de retenção nos primeiros 12 meses de vida do cliente. Após esse período, o ROI de campanhas de retenção cai drasticamente.
     """)
+    return
 
 
 @app.cell
@@ -172,6 +179,7 @@ def _(mo):
 
     Importações, carregamento e tratamento da base.
     """)
+    return
 
 
 @app.cell
@@ -186,6 +194,7 @@ def _(mo):
     mo.md(r"""
     ## 2.1 Configuração do ambiente
     """)
+    return
 
 
 @app.cell
@@ -220,6 +229,7 @@ def _(mo):
     Caminho relativo à raiz do projeto:
     - `data/raw/WA_Fn-UseC_-Telco-Customer-Churn.csv`
     """)
+    return
 
 
 @app.cell(hide_code=True)
@@ -227,12 +237,23 @@ def _(mo):
     mo.md(r"""
     ### 2.2.1 Carrega Base
     """)
+    return
 
 
 @app.cell
 def _(pd):
-    path = "data/raw/WA_Fn-UseC_-Telco-Customer-Churn.csv"
-    df = pd.read_csv(path)
+    # Lógica inteligente: tenta arquivo local primeiro (desenvolvimento),
+    # depois URL pública (WASM/molab)
+    local_path = "data/raw/WA_Fn-UseC_-Telco-Customer-Churn.csv"
+    public_url = "https://raw.githubusercontent.com/IBM/telco-customer-churn-on-icp4d/master/data/Telco-Customer-Churn.csv"
+
+    try:
+        df = pd.read_csv(local_path)
+        print(f"✓ Dataset carregado do arquivo local: {local_path}")
+    except (FileNotFoundError, OSError):
+        print(f"⚠ Arquivo local não encontrado. Carregando da URL pública...")
+        df = pd.read_csv(public_url)
+        print(f"✓ Dataset carregado da URL: {public_url}")
 
     print(f"Shape dos dados: {df.shape}")
     df.head()
@@ -244,6 +265,7 @@ def _(mo):
     mo.md("""
     ### 2.2.2 Copia de Data RAW
     """)
+    return
 
 
 @app.cell
@@ -257,6 +279,7 @@ def _(mo):
     mo.md("""
     ### 2.2.3 Total Charges para Numerico
     """)
+    return
 
 
 @app.cell(hide_code=True)
@@ -265,6 +288,7 @@ def total_charges_to_numeric_explain(mo):
     **Por que essa conversão é necessária?**
     Conforme observamos na **Seção 3.1 (Describe da Base)** da nossa coluna de Análises, o `TotalCharges` foi importado originalmente como texto (`object`). Isso ocorreu porque a base continha espaços em branco para clientes novos sem faturas. O `pd.to_numeric(errors="coerce")` força a conversão para número, transformando esses espaços ocultos em `NaN` para podermos tratá-los depois.
     """)
+    return
 
 
 @app.cell
@@ -280,6 +304,7 @@ def _(mo):
     mo.md("""
     ### 2.2.4 Tratamento de Nulos
     """)
+    return
 
 
 @app.cell(hide_code=True)
@@ -288,6 +313,7 @@ def _(mo):
     **Remoção de Nulos (Drop NA):**
     Como visto em 3.2, os valores nulos representam uma fatia minúscula (0.16%) referente a clientes sem a 1ª fatura. A remoção direta simplifica a modelagem preditiva posterior e não introduz vieses significativos na base de dados.
     """)
+    return
 
 
 @app.cell
@@ -301,6 +327,7 @@ def _(mo):
     mo.md(r"""
     ### 2.2.5 Categoriza Senior Citzen
     """)
+    return
 
 
 @app.cell(hide_code=True)
@@ -309,6 +336,7 @@ def _(mo):
     **Senioridade Categórica:**
     A feature `SeniorCitizen` foi importada originalmente como `0` e `1` (numérica). O mapeamento explícito para texto (`No`/`Yes`) previne que gráficos de correlação ou algoritmos de Machine Learning a tratem como uma variável contínua, facilitando também a compreensão visual, para o EDA.(Depois ela deve ser trasnformada novamente para modelagem)
     """)
+    return
 
 
 @app.cell
@@ -324,6 +352,7 @@ def _(mo):
     mo.md("""
     ### 2.2.6 Criação dos Atributos RFM
     """)
+    return
 
 
 @app.cell
@@ -351,6 +380,7 @@ def _(mo):
     mo.md("""
     ### 2.2.7 Segmentação por Tempo de Vida (Recency)
     """)
+    return
 
 
 @app.cell
@@ -377,6 +407,7 @@ def _(mo):
     mo.md("""
     ### 2.2.8 Segmentação por Ticket Médio (Monetary)
     """)
+    return
 
 
 @app.cell
@@ -396,6 +427,7 @@ def _(mo):
     mo.md("""
     ### 2.2.9 Segmentação por Serviços Contratados (Frequency)
     """)
+    return
 
 
 @app.cell
@@ -420,6 +452,7 @@ def _(mo):
     mo.md("""
     ### 2.2.10 Criação da Target Binária
     """)
+    return
 
 
 @app.cell
@@ -433,6 +466,7 @@ def _(mo):
     mo.md("""
     # 3. Análise Exploratória de Dados
     """)
+    return
 
 
 @app.cell(hide_code=True)
@@ -440,6 +474,7 @@ def _(mo):
     mo.md(r"""
     ## 3.1 Describe da Base
     """)
+    return
 
 
 @app.cell(hide_code=True)
@@ -450,6 +485,7 @@ def describe_insight(mo):
     - **Variação de Planos:** O valor mensal cobrado (`MonthlyCharges`) possui uma amplitude grande, variando de \$18.25 a \$118.75, indicando perfis de clientes bem distintos (desde planos básicos até pacotes premium).
     - **Tempo de Retenção (`tenure`):** Temos desde clientes recém-chegados (0 meses) até clientes que estão na operadora há 6 anos (72 meses).
     """)
+    return
 
 
 @app.cell
@@ -459,6 +495,7 @@ def _(df):
 
     print("\n=== ESTATÍSTICAS DESCRITIVAS (NUMÉRICAS) ===\n")
     df.describe()
+    return
 
 
 @app.cell(hide_code=True)
@@ -466,6 +503,7 @@ def _(mo):
     mo.md(r"""
     ## 3.2 Detectando Missings
     """)
+    return
 
 
 @app.cell
@@ -483,6 +521,7 @@ def missing_analysis(df_2, pd):
         print(missing_df)
     else:
         print("Nenhum missing value detectado na base!")
+    return
 
 
 @app.cell(hide_code=True)
@@ -494,6 +533,7 @@ def _(mo):
 
     *Nota: Este tratamento já foi implementado de forma reativa na nossa pipeline de Processamento de Dados (Etapa 5 - Coluna Central), garantindo que as análises visuais abaixo utilizem a base `df_eda` 100% limpa.*
     """)
+    return
 
 
 @app.cell(hide_code=True)
@@ -501,6 +541,7 @@ def _(mo):
     mo.md(r"""
     ## 3.3 Análise da variável target (`Churn`)
     """)
+    return
 
 
 @app.cell
@@ -509,6 +550,7 @@ def _(df, df_3):
     print("A coluna Churn vem com os valores:")
     print(df_3["Churn"].value_counts(dropna=False))
     print(f"\nTotal de nulos na coluna original: {df['Churn'].isnull().sum()}")
+    return
 
 
 @app.cell(hide_code=True)
@@ -516,11 +558,13 @@ def _(mo):
     mo.md(r"""
     **Atributo Churn é uma string**, iremos transforma-lá em 0,1 para facilitar a análise.
     """)
+    return
 
 
 @app.cell
 def distr_target(df_eda, plt):
     target_plot = plot_target_distribution(df_eda, "Churn", plt)
+    return
 
 
 @app.cell(hide_code=True)
@@ -528,6 +572,7 @@ def _(mo):
     mo.md(r"""
     **Variável Target:** A variável alvo `Churn` está desbalanceada (ratio ~0.36), o que reforça a necessidade de avaliar métricas além de acurácia.
     """)
+    return
 
 
 @app.cell(hide_code=True)
@@ -535,6 +580,7 @@ def _(mo):
     mo.md(r"""
     ## 3.4 Análise das features categóricas
     """)
+    return
 
 
 @app.cell(hide_code=True)
@@ -558,6 +604,7 @@ def _(cat_dropdown, df_eda, mtick, plt):
     plot_categorial = plot_single_categorical(
         df_eda, cat_dropdown.value, plt, mtick
     )
+    return
 
 
 @app.cell(hide_code=True)
@@ -572,6 +619,7 @@ def _(mo):
     - **🛡️ Serviços Adicionais (Add-ons):** A adoção de serviços protetivos como `OnlineSecurity` e `TechSupport` é baixa (~29%). A grande maioria dos clientes prefere pacotes sem essas seguranças extras.
     - **⚠️ Vínculo e Risco Contratual (Atenção):** A característica que mais chama atenção é o vínculo financeiro. **55.1%** dos clientes possuem contratos `Month-to-month` (mensais), o que facilita muito a taxa de abandono (Churn). Além disso, o método de pagamento mais comum é o `Electronic check` (33.6%), sugerindo que o atrito mensal de faturamento é alto comparado a métodos automatizados.
     """)
+    return
 
 
 @app.cell(hide_code=True)
@@ -579,6 +627,7 @@ def _(mo):
     mo.md(r"""
     ## 3.5 Análise de Outliers
     """)
+    return
 
 
 @app.cell(hide_code=True)
@@ -602,6 +651,7 @@ def _(df_eda, np, num_dropdown, pd, plt, sns):
     plot_outlier = plot_single_outlier(
         df_eda, num_dropdown.value, plt, sns, np, pd
     )
+    return
 
 
 @app.cell(hide_code=True)
@@ -609,6 +659,7 @@ def _(mo):
     mo.md(r"""
     **Outliers:** Nenhum outlier crítico detectado nas variáveis numéricas.
     """)
+    return
 
 
 @app.cell(hide_code=True)
@@ -616,6 +667,7 @@ def _(mo):
     mo.md(r"""
     ## 3.6 Análise de anomalias e duplicados
     """)
+    return
 
 
 @app.cell(hide_code=True)
@@ -665,6 +717,7 @@ def _(df_eda):
         )
     duplicates = int(df_eda.duplicated().sum())
     print(f"\nRegistros duplicados: {duplicates}")
+    return
 
 
 @app.cell(hide_code=True)
@@ -672,6 +725,7 @@ def _(mo):
     mo.md(r"""
     **Anomalias e Consistência:** Nenhuma anomalia de domínio detectada.
     """)
+    return
 
 
 @app.cell(hide_code=True)
@@ -679,6 +733,7 @@ def _(mo):
     mo.md(r"""
     ## 3.7 Análise de distribuições
     """)
+    return
 
 
 @app.cell(hide_code=True)
@@ -723,6 +778,7 @@ def assimetria_analysis(df_eda, np, pd, plt):
         _fig.delaxes(_ax)
     plt.tight_layout()
     plt.show()
+    return
 
 
 @app.cell(hide_code=True)
@@ -730,6 +786,7 @@ def _(mo):
     mo.md(r"""
     **Distribuições:** `tenure` apresenta distribuição **bimodal** (muitos clientes novos com tenure baixo e clientes fidelizados com tenure alto), refletindo dois perfis distintos de comportamento. `MonthlyCharges` tem leve assimetria à direita. `TotalCharges` é fortemente assimétrico à direita.
     """)
+    return
 
 
 @app.cell(hide_code=True)
@@ -737,11 +794,13 @@ def _(mo):
     mo.md(r"""
     ## 3.8 Análise de correlações (data readiness)
     """)
+    return
 
 
 @app.cell
 def correlation_analysis(df_eda, pd, plt, sns):
     plot_correlation_analysis(df_eda, plt, sns, pd)
+    return
 
 
 @app.cell(hide_code=True)
@@ -753,6 +812,7 @@ def _(mo):
     - **Fidelidade (Correlações Negativas):** Tempo de permanência (`tenure` com -0.35) e **Contratos de 2 anos** (`Contract_Two year` com -0.30) são os maiores blindadores contra o churn. Curiosamente, a ausência de serviço de internet (`No internet service` com -0.22) também tem forte correlação negativa, sugerindo que clientes apenas de telefonia são mais estáveis.
     - **Atenção (Multicolinearidade):** Como esperado, o `TotalCharges` tem uma altíssima correlação com `tenure` (o total é o tempo vezes a mensalidade). Além disso, a `InternetService_Fiber optic` tem forte relação direta com o aumento da `MonthlyCharges`. Para a modelagem (especialmente algoritmos lineares), o ideal é remover o `TotalCharges` para não confundir o modelo com informações redundantes.
     """)
+    return
 
 
 @app.cell(hide_code=True)
@@ -760,6 +820,7 @@ def _(mo):
     mo.md(r"""
     ## 3.9 Análise de Churn vs Features
     """)
+    return
 
 
 @app.cell(hide_code=True)
@@ -781,6 +842,7 @@ def _(df_eda, mo, np):
 @app.cell(hide_code=True)
 def _(df_eda, num_kde_dropdown, plot_single_numeric_kde, plt, sns):
     plot_single_numeric_kde(df_eda, num_kde_dropdown.value, plt, sns)
+    return
 
 
 @app.cell(hide_code=True)
@@ -791,6 +853,7 @@ def _(mo):
     - **Maior `MonthlyCharges`**: a curva de churn (vermelho) está deslocada para a direita, indicando que quem paga mais tende a cancelar mais.
     - **Menor `TotalCharges`**: consequência direta do menor tenure — a curva de churn acumula valores baixos, pois saem antes de acumular cobrança.
     """)
+    return
 
 
 @app.cell(hide_code=True)
@@ -816,6 +879,7 @@ def _(churn_cat_dropdown, df_eda, mtick, pd, plt):
     plot_churn_cat = plot_churn_by_categorical(
         df_eda, churn_cat_dropdown.value, plt, mtick, pd
     )
+    return
 
 
 @app.cell(hide_code=True)
@@ -838,6 +902,7 @@ def _(mo):
       - **Família:** Clientes solteiros (`Partner=No`: 33.0%) e sem dependentes (31.3%) evadem mais. Planos familiares parecem "engessar" a saída.
       - **Gênero:** Irrelevante para o modelo (Feminino 27.0% vs Masculino 26.2%).
     """)
+    return
 
 
 @app.cell(hide_code=True)
@@ -847,6 +912,7 @@ def _(mo):
 
     Dividindo os clientes em grupos baseados no tempo de permanência (`tenure`), conseguimos enxergar claramente o perfil de risco de cada ciclo de vida.
     """)
+    return
 
 
 @app.cell(hide_code=True)
@@ -898,6 +964,7 @@ def _(df_eda, pd, plt):
 
     plt.tight_layout()
     plt.show()
+    return
 
 
 @app.cell(hide_code=True)
@@ -921,6 +988,7 @@ def _(mo):
 
     **Para Modelagem:** As features `tenure_segment`, `monetary_segment` e `service_segment` são variáveis categóricas ordinais extremamente poderosas para os algoritmos de ML, capturando de forma clara o estágio do ciclo de vida, poder aquisitivo e engajamento do cliente.
     """)
+    return
 
 
 @app.cell(hide_code=True)
@@ -930,6 +998,7 @@ def _(mo):
 
     Agora que temos os 3 segmentos RFM criados, vamos cruzá-los para identificar os micro-perfis de maior risco.
     """)
+    return
 
 
 @app.cell(hide_code=True)
@@ -949,11 +1018,13 @@ def _(df_eda, mtick, pd, plot_churn_by_rfm_segment, plt, rfm_dropdown):
     plot_rfm = plot_churn_by_rfm_segment(
         df_eda, rfm_dropdown.value, plt, mtick, pd
     )
+    return
 
 
 @app.cell(hide_code=True)
 def _(df_eda, pd, plot_rfm_heatmap, plt, sns):
     plot_rfm_heatmap(df_eda, plt, sns, pd)
+    return
 
 
 @app.cell(hide_code=True)
@@ -966,6 +1037,7 @@ def _(mo):
     - **⏰ × 💰 Cruzamento (Heatmap):** O mapa de calor acima revela que a combinação mais perigosa é **Novo (0-12m) + Premium (alto ticket)**. Esses clientes chegam pagando caro, não têm fidelidade ainda, e saem rapidamente se sentirem que o custo-benefício não bate. Ações: onboarding premium com gerente dedicado nos primeiros 90 dias.
     - **🎯 Ação de Retenção Imediata:** O modelo de ML deve priorizar a classificação do segmento **Novo + Econômico/Básico**, pois são os mais numerosos e voláteis. Oferecer desconto progressivo nos primeiros 6 meses pode segurar essa base.
     """)
+    return
 
 
 @app.cell(column=3, hide_code=True)
@@ -975,6 +1047,7 @@ def _(mo):
 
     Funções para abstrair código de visualização e utilitários da base.
     """)
+    return
 
 
 @app.function(hide_code=True)
