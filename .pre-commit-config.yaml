@@ -45,6 +45,9 @@ repos:
 default_language_version:
   python: python3.13
 
+# Excluir pasta docs/ de todas as verificações (arquivos gerados automaticamente)
+exclude: ^docs/
+
 # CI configuration
 ci:
   autofix_prs: true
