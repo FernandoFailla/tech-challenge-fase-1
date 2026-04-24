@@ -161,7 +161,6 @@ def _(df_eda, pd, plt, sns):
     ax_rfm_exec.set_ylabel("Tempo de Casa (Tenure)", fontsize=11)
 
     plt.tight_layout()
-    plt.show()
     return
 
 
@@ -214,6 +213,9 @@ def _():
 
     import warnings
 
+    import matplotlib
+
+    matplotlib.use("Agg")  # Backend não-interativo (obrigatório para WASM)
     import matplotlib.pyplot as plt
     import matplotlib.ticker as mtick
     import numpy as np
@@ -258,13 +260,13 @@ def _(pd):
     local_path = "data/raw/WA_Fn-UseC_-Telco-Customer-Churn.csv"
     public_url = "https://raw.githubusercontent.com/IBM/telco-customer-churn-on-icp4d/master/data/Telco-Customer-Churn.csv"
 
-    try:
-        df = pd.read_csv(local_path)
-        print(f"✓ Dataset carregado do arquivo local: {local_path}")
-    except (FileNotFoundError, OSError):
-        print(f"⚠ Arquivo local não encontrado. Carregando da URL pública...")
-        df = pd.read_csv(public_url)
-        print(f"✓ Dataset carregado da URL: {public_url}")
+    # try:
+    #    df = pd.read_csv(local_path)
+    #    print(f"✓ Dataset carregado do arquivo local: {local_path}")
+    # except (FileNotFoundError, OSError):
+    print(f"⚠ Arquivo local não encontrado. Carregando da URL pública...")
+    df = pd.read_csv(public_url)
+    print(f"✓ Dataset carregado da URL: {public_url}")
 
     print(f"Shape dos dados: {df.shape}")
     df.head()
@@ -615,7 +617,7 @@ def _(cat_dropdown, df_eda, mtick, plt):
     plot_categorial = plot_single_categorical(
         df_eda, cat_dropdown.value, plt, mtick
     )
-    return
+    return plot_categorial
 
 
 @app.cell(hide_code=True)
@@ -662,7 +664,7 @@ def _(df_eda, np, num_dropdown, pd, plt, sns):
     plot_outlier = plot_single_outlier(
         df_eda, num_dropdown.value, plt, sns, np, pd
     )
-    return
+    return plot_outlier
 
 
 @app.cell(hide_code=True)
@@ -788,7 +790,6 @@ def assimetria_analysis(df_eda, np, pd, plt):
     for _ax in _axes[_n:]:
         _fig.delaxes(_ax)
     plt.tight_layout()
-    plt.show()
     return
 
 
@@ -810,8 +811,7 @@ def _(mo):
 
 @app.cell
 def correlation_analysis(df_eda, pd, plt, sns):
-    plot_correlation_analysis(df_eda, plt, sns, pd)
-    return
+    return plot_correlation_analysis(df_eda, plt, sns, pd)
 
 
 @app.cell(hide_code=True)
@@ -852,8 +852,7 @@ def _(df_eda, mo, np):
 
 @app.cell(hide_code=True)
 def _(df_eda, num_kde_dropdown, plot_single_numeric_kde, plt, sns):
-    plot_single_numeric_kde(df_eda, num_kde_dropdown.value, plt, sns)
-    return
+    return plot_single_numeric_kde(df_eda, num_kde_dropdown.value, plt, sns)
 
 
 @app.cell(hide_code=True)
@@ -890,7 +889,7 @@ def _(churn_cat_dropdown, df_eda, mtick, pd, plt):
     plot_churn_cat = plot_churn_by_categorical(
         df_eda, churn_cat_dropdown.value, plt, mtick, pd
     )
-    return
+    return plot_churn_cat
 
 
 @app.cell(hide_code=True)
@@ -974,7 +973,6 @@ def _(df_eda, pd, plt):
         )
 
     plt.tight_layout()
-    plt.show()
     return
 
 
@@ -1029,13 +1027,12 @@ def _(df_eda, mtick, pd, plot_churn_by_rfm_segment, plt, rfm_dropdown):
     plot_rfm = plot_churn_by_rfm_segment(
         df_eda, rfm_dropdown.value, plt, mtick, pd
     )
-    return
+    return plot_rfm
 
 
 @app.cell(hide_code=True)
 def _(df_eda, pd, plot_rfm_heatmap, plt, sns):
-    plot_rfm_heatmap(df_eda, plt, sns, pd)
-    return
+    return plot_rfm_heatmap(df_eda, plt, sns, pd)
 
 
 @app.cell(hide_code=True)
@@ -1088,7 +1085,6 @@ def plot_target_distribution(df, target_col, plt):
     )
     _axes[1].set_title("Proporção de classes")
     plt.tight_layout()
-    plt.show()
     ratio = target_counts.min() / target_counts.max()
     print(f"\nRatio de balanceamento: {ratio:.2f}")
     if ratio < 0.5:
@@ -1097,7 +1093,7 @@ def plot_target_distribution(df, target_col, plt):
         )
     else:
         print("✓ Dataset razoavelmente balanceado.")
-    return _fig, _axes
+    return _fig
 
 
 @app.function(hide_code=True)
@@ -1127,8 +1123,7 @@ def plot_single_categorical(df, col_name, plt, mtick):
             fontsize=10,
         )
     plt.tight_layout()
-    plt.show()
-    return _ax
+    return plt.gcf()
 
 
 @app.function(hide_code=True)
@@ -1170,8 +1165,7 @@ def plot_single_outlier(df, col_name, plt, sns, np, pd):
     )
 
     plt.tight_layout()
-    plt.show()
-    return ax
+    return plt.gcf()
 
 
 @app.function(hide_code=True)
@@ -1191,7 +1185,7 @@ def plot_correlation_analysis(df, plt, sns, pd):
         plt.colorbar(shrink=0.8)
     plt.title("Matriz de Correlação — Telco Churn")
     plt.tight_layout()
-    plt.show()
+    fig = plt.gcf()
 
     print("=== TOP 10 CORRELAÇÕES POSITIVAS COM CHURN_BIN ===")
     target_corr = corr["Churn_bin"].sort_values(ascending=False)
@@ -1225,6 +1219,7 @@ def plot_correlation_analysis(df, plt, sns, pd):
         )
     else:
         print("Nenhuma correlação forte detectada.")
+    return fig
 
 
 @app.function(hide_code=True)
@@ -1279,8 +1274,7 @@ def plot_churn_by_categorical(df, feature_col, plt, mtick, pd):
             )
 
     plt.tight_layout()
-    plt.show()
-    return _ax
+    return plt.gcf()
 
 
 @app.cell(hide_code=True)
@@ -1329,8 +1323,7 @@ def _():
             )
 
         plt.tight_layout()
-        plt.show()
-        return _ax
+        return plt.gcf()
 
     def plot_rfm_heatmap(df, plt, sns, pd):
         rfm_crosstab = pd.crosstab(
@@ -1361,8 +1354,7 @@ def _():
         plt.xlabel("Segmento Monetário (MonthlyCharges)", fontsize=12)
         plt.ylabel("Segmento de Tempo de Vida (Tenure)", fontsize=12)
         plt.tight_layout()
-        plt.show()
-        return rfm_crosstab
+        return plt.gcf()
 
     def plot_single_numeric_kde(df, col_name, plt, sns):
         if not col_name or sns is None:
@@ -1387,8 +1379,7 @@ def _():
         plt.ylabel("Densidade", fontsize=11)
         plt.grid(axis="y", linestyle="--", alpha=0.35)
         plt.tight_layout()
-        plt.show()
-        return
+        return plt.gcf()
 
     return plot_churn_by_rfm_segment, plot_rfm_heatmap, plot_single_numeric_kde
 
