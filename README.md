@@ -4,6 +4,14 @@
 
 Pipeline end-to-end de ML para previsão de churn em telecomunicações — MLP com PyTorch, baselines Scikit-Learn, rastreamento com MLflow e API de inferência com FastAPI. Tech Challenge Fase 1 · PÓS TECH FIAP.
 
+## EDA Interativo (Marimo WASM)
+
+O notebook de Análise Exploratória de Dados foi exportado como uma aplicação WebAssembly (WASM) e está disponível via GitHub Pages. A aplicação roda 100% no navegador, sem necessidade de backend Python.
+
+**Acesso:** [https://g13-mle.github.io/tech-challenge-fase-1/](https://g13-mle.github.io/tech-challenge-fase-1/)
+
+> **Limitações do ambiente WASM/Pyodide:** a execução no navegador possui overhead de performance e limite de ~2GB de RAM. Recomendado para demonstrações e análises educacionais.
+
 ## Contexto do problema
 
 Em telecom, churn representa o cancelamento de clientes. Antecipar esse comportamento ajuda o negócio a:
@@ -11,6 +19,26 @@ Em telecom, churn representa o cancelamento de clientes. Antecipar esse comporta
 - reduzir perda de receita;
 - priorizar ações de retenção;
 - melhorar a experiência do cliente com decisões orientadas por dados.
+
+### Como ativar o GitHub Pages (se necessário reconfigurar)
+
+O deploy da aplicação WASM é feito automaticamente pelo GitHub Pages a partir da pasta `docs/`. Para ativar ou reconfigurar:
+
+1. Acesse o repositório no GitHub → **Settings** → **Pages**
+2. Em **Build and deployment > Source**, selecione **Deploy from a branch**
+3. Selecione a branch principal (`treino/ygor-issue-17-eda-churn`) e o diretório **`/docs`**
+4. Clique em **Save**
+5. Aguarde 1-2 minutos até o indicador do GitHub Actions ficar verde
+
+### Como re-exportar o notebook WASM
+
+Se o notebook `notebooks/01_eda.py` for atualizado, re-execute:
+
+```bash
+uv run marimo export html-wasm notebooks/01_eda.py -o docs --mode run --force --sandbox
+```
+
+Depois faça commit e push da pasta `docs/` atualizada.
 
 ## Estrutura do repositório
 
