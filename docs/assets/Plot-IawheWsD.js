@@ -233,7 +233,7 @@ float cookTorranceSpecular(
   float G1 = (2.0 * NdotH * VdotN) / VdotH;
   float G2 = (2.0 * NdotH * LdotN) / LdotH;
   float G = min(1.0, min(G1, G2));
-
+  
   //Distribution term
   float D = beckmannDistribution(NdotH, roughness);
 
@@ -245,7 +245,7 @@ float cookTorranceSpecular(
 }
 
 bool outOfRange(float a, float b, float p) {
-  return ((p > max(a, b)) ||
+  return ((p > max(a, b)) || 
           (p < min(a, b)));
 }
 
@@ -393,7 +393,7 @@ void main() {
 #define GLSLIFY 1
 
 bool outOfRange(float a, float b, float p) {
-  return ((p > max(a, b)) ||
+  return ((p > max(a, b)) || 
           (p < min(a, b)));
 }
 
@@ -511,7 +511,7 @@ float cookTorranceSpecular(
   float G1 = (2.0 * NdotH * VdotN) / VdotH;
   float G2 = (2.0 * NdotH * LdotN) / LdotH;
   float G = min(1.0, min(G1, G2));
-
+  
   //Distribution term
   float D = beckmannDistribution(NdotH, roughness);
 
@@ -525,7 +525,7 @@ float cookTorranceSpecular(
 //#pragma glslify: beckmann = require(glsl-specular-beckmann) // used in gl-surface3d
 
 bool outOfRange(float a, float b, float p) {
-  return ((p > max(a, b)) ||
+  return ((p > max(a, b)) || 
           (p < min(a, b)));
 }
 
@@ -604,7 +604,7 @@ void main() {
 #define GLSLIFY 1
 
 bool outOfRange(float a, float b, float p) {
-  return ((p > max(a, b)) ||
+  return ((p > max(a, b)) || 
           (p < min(a, b)));
 }
 
@@ -639,7 +639,7 @@ void main() {
 #define GLSLIFY 1
 
 bool outOfRange(float a, float b, float p) {
-  return ((p > max(a, b)) ||
+  return ((p > max(a, b)) || 
           (p < min(a, b)));
 }
 
@@ -713,7 +713,7 @@ void main() {
 #define GLSLIFY 1
 
 bool outOfRange(float a, float b, float p) {
-  return ((p > max(a, b)) ||
+  return ((p > max(a, b)) || 
           (p < min(a, b)));
 }
 
@@ -746,7 +746,7 @@ void main() {
 #define GLSLIFY 1
 
 bool outOfRange(float a, float b, float p) {
-  return ((p > max(a, b)) ||
+  return ((p > max(a, b)) || 
           (p < min(a, b)));
 }
 
@@ -861,7 +861,7 @@ float beckmannSpecular(
 }
 
 bool outOfRange(float a, float b, float p) {
-  return ((p > max(a, b)) ||
+  return ((p > max(a, b)) || 
           (p < min(a, b)));
 }
 
@@ -963,7 +963,7 @@ void main() {
 #define GLSLIFY 1
 
 bool outOfRange(float a, float b, float p) {
-  return ((p > max(a, b)) ||
+  return ((p > max(a, b)) || 
           (p < min(a, b)));
 }
 
@@ -1011,7 +1011,7 @@ void main() {
 #define GLSLIFY 1
 
 bool outOfRange(float a, float b, float p) {
-  return ((p > max(a, b)) ||
+  return ((p > max(a, b)) || 
           (p < min(a, b)));
 }
 
@@ -1068,7 +1068,7 @@ void main() {
 #define GLSLIFY 1
 
 bool outOfRange(float a, float b, float p) {
-  return ((p > max(a, b)) ||
+  return ((p > max(a, b)) || 
           (p < min(a, b)));
 }
 
@@ -1126,7 +1126,7 @@ void main() {
 #define GLSLIFY 1
 
 bool outOfRange(float a, float b, float p) {
-  return ((p > max(a, b)) ||
+  return ((p > max(a, b)) || 
           (p < min(a, b)));
 }
 
@@ -1186,7 +1186,7 @@ void main() {
 #define GLSLIFY 1
 
 bool outOfRange(float a, float b, float p) {
-  return ((p > max(a, b)) ||
+  return ((p > max(a, b)) || 
           (p < min(a, b)));
 }
 
@@ -1222,7 +1222,7 @@ void main() {
 #define GLSLIFY 1
 
 bool outOfRange(float a, float b, float p) {
-  return ((p > max(a, b)) ||
+  return ((p > max(a, b)) || 
           (p < min(a, b)));
 }
 
@@ -1526,7 +1526,7 @@ void main() {
 #define GLSLIFY 1
 
 bool outOfRange(float a, float b, float p) {
-  return ((p > max(a, b)) ||
+  return ((p > max(a, b)) || 
           (p < min(a, b)));
 }
 
@@ -1673,7 +1673,7 @@ float cookTorranceSpecular(
   float G1 = (2.0 * NdotH * VdotN) / VdotH;
   float G2 = (2.0 * NdotH * LdotN) / LdotH;
   float G = min(1.0, min(G1, G2));
-
+  
   //Distribution term
   float D = beckmannDistribution(NdotH, roughness);
 
@@ -1685,7 +1685,7 @@ float cookTorranceSpecular(
 }
 
 bool outOfRange(float a, float b, float p) {
-  return ((p > max(a, b)) ||
+  return ((p > max(a, b)) || 
           (p < min(a, b)));
 }
 
@@ -1796,7 +1796,7 @@ void main() {
 #define GLSLIFY 1
 
 bool outOfRange(float a, float b, float p) {
-  return ((p > max(a, b)) ||
+  return ((p > max(a, b)) || 
           (p < min(a, b)));
 }
 
@@ -1871,7 +1871,7 @@ void main() {
 #define GLSLIFY 1
 
 bool outOfRange(float a, float b, float p) {
-  return ((p > max(a, b)) ||
+  return ((p > max(a, b)) || 
           (p < min(a, b)));
 }
 
@@ -1957,7 +1957,7 @@ vec4 packFloat(float v) {
 }
 
 bool outOfRange(float a, float b, float p) {
-  return ((p > max(a, b)) ||
+  return ((p > max(a, b)) || 
           (p < min(a, b)));
 }
 

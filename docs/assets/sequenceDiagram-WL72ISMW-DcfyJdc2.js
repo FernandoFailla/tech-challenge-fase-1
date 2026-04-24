@@ -20,7 +20,7 @@ Expecting `+vt.join(", ")+", got '"+(this.terminals_[tt]||tt)+"'":"Parse error o
   .actor-line {
     stroke: ${e.actorLineColor};
   }
-
+  
   .innerArc {
     stroke-width: 1.5;
     stroke-dasharray: none;

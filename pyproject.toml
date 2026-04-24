@@ -10,6 +10,7 @@ dependencies = [
     "pandas>=2.3.3",
     "scikit-learn>=1.8.0",
     "protobuf<5.0.0",
+    "marimo>=0.23.3",
 ]
 authors = [
   {name = "Fernando Failla Foschiani", email = "fefailla68@gmail.com"}

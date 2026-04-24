@@ -15,23 +15,23 @@ import{s as I}from"./chunk-LvLJmgfZ.js";import{t as Ue}from"./react-Bj1aDYRI.js"
     margin-right: ${a}px ${r};
     `,n==="padding"&&`padding-right: ${a}px ${r};`].filter(Boolean).join("")}
   }
-
+  
   .${U} {
     right: ${a}px ${r};
   }
-
+  
   .${K} {
     margin-right: ${a}px ${r};
   }
-
+  
   .${U} .${U} {
     right: 0 ${r};
   }
-
+  
   .${K} .${K} {
     margin-right: 0 ${r};
   }
-
+  
   body[${D}] {
     ${Rt}: ${a}px;
   }

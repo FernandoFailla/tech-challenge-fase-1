@@ -25,7 +25,7 @@ Expecting `+_e.join(", ")+", got '"+(this.terminals_[b]||b)+"'":"Parse error on 
     stroke: ${e.requirementBorderColor};
     stroke-width: ${e.requirementBorderSize};
   }
-
+  
   .reqTitle, .reqLabel{
     fill:  ${e.requirementTextColor};
   }
