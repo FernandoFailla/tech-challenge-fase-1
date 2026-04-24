@@ -161,6 +161,7 @@ def _(df_eda, pd, plt, sns):
     ax_rfm_exec.set_ylabel("Tempo de Casa (Tenure)", fontsize=11)
 
     plt.tight_layout()
+    fig_rfm_exec
     return
 
 
@@ -577,6 +578,7 @@ def _(mo):
 @app.cell
 def distr_target(df_eda, plt):
     target_plot = plot_target_distribution(df_eda, "Churn", plt)
+    target_plot
     return
 
 
@@ -617,7 +619,8 @@ def _(cat_dropdown, df_eda, mtick, plt):
     plot_categorial = plot_single_categorical(
         df_eda, cat_dropdown.value, plt, mtick
     )
-    return plot_categorial
+    plot_categorial
+    return
 
 
 @app.cell(hide_code=True)
@@ -664,7 +667,8 @@ def _(df_eda, np, num_dropdown, pd, plt, sns):
     plot_outlier = plot_single_outlier(
         df_eda, num_dropdown.value, plt, sns, np, pd
     )
-    return plot_outlier
+    plot_outlier
+    return
 
 
 @app.cell(hide_code=True)
@@ -790,6 +794,7 @@ def assimetria_analysis(df_eda, np, pd, plt):
     for _ax in _axes[_n:]:
         _fig.delaxes(_ax)
     plt.tight_layout()
+    _fig
     return
 
 
@@ -811,7 +816,8 @@ def _(mo):
 
 @app.cell
 def correlation_analysis(df_eda, pd, plt, sns):
-    return plot_correlation_analysis(df_eda, plt, sns, pd)
+    plot_correlation_analysis(df_eda, plt, sns, pd)
+    return
 
 
 @app.cell(hide_code=True)
@@ -852,7 +858,8 @@ def _(df_eda, mo, np):
 
 @app.cell(hide_code=True)
 def _(df_eda, num_kde_dropdown, plot_single_numeric_kde, plt, sns):
-    return plot_single_numeric_kde(df_eda, num_kde_dropdown.value, plt, sns)
+    plot_single_numeric_kde(df_eda, num_kde_dropdown.value, plt, sns)
+    return
 
 
 @app.cell(hide_code=True)
@@ -889,7 +896,8 @@ def _(churn_cat_dropdown, df_eda, mtick, pd, plt):
     plot_churn_cat = plot_churn_by_categorical(
         df_eda, churn_cat_dropdown.value, plt, mtick, pd
     )
-    return plot_churn_cat
+    plot_churn_cat
+    return
 
 
 @app.cell(hide_code=True)
@@ -973,6 +981,7 @@ def _(df_eda, pd, plt):
         )
 
     plt.tight_layout()
+    fig_seg
     return
 
 
@@ -1027,12 +1036,14 @@ def _(df_eda, mtick, pd, plot_churn_by_rfm_segment, plt, rfm_dropdown):
     plot_rfm = plot_churn_by_rfm_segment(
         df_eda, rfm_dropdown.value, plt, mtick, pd
     )
-    return plot_rfm
+    plot_rfm
+    return
 
 
 @app.cell(hide_code=True)
 def _(df_eda, pd, plot_rfm_heatmap, plt, sns):
-    return plot_rfm_heatmap(df_eda, plt, sns, pd)
+    plot_rfm_heatmap(df_eda, plt, sns, pd)
+    return
 
 
 @app.cell(hide_code=True)
