@@ -178,7 +178,7 @@ def _(mo):
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _():
     return
 
@@ -296,7 +296,7 @@ def _(mo):
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def total_charges_to_numeric_explain(mo):
     mo.md(r"""
     **Por que essa conversão é necessária?**
@@ -491,7 +491,7 @@ def _(mo):
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def describe_insight(mo):
     mo.md(r"""
     - **Tipagem Incorreta:** A coluna `TotalCharges` foi importada como `object` (texto) em vez de numérica. Isso é um forte indício de que existem valores ocultos (como espaços em branco) inseridos no lugar de números.
@@ -1395,7 +1395,7 @@ def _():
     return plot_churn_by_rfm_segment, plot_rfm_heatmap, plot_single_numeric_kde
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _():
     return
 
