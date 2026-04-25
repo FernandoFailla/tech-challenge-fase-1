@@ -15,7 +15,7 @@ __generated_with = "0.23.3"
 app = marimo.App(width="columns")
 
 
-@app.cell(column=0)
+@app.cell(column=0, hide_code=True)
 def _(mo):
     mo.md(r"""
     # 📊 Resumo Executivo
@@ -24,7 +24,7 @@ def _(mo):
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(mo):
     mo.callout(
         mo.md(r"""
@@ -37,7 +37,7 @@ def _(mo):
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(mo):
     mo.accordion(
         {
@@ -112,7 +112,7 @@ def _(mo, plt):
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
     ## 1.1 Mapa de Risco RFM: Tempo de Vida × Ticket Médio
@@ -165,7 +165,7 @@ def _(df_eda, pd, plt, sns):
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
     **📊 Insights do Mapa de Risco:**
@@ -183,7 +183,7 @@ def _():
     return
 
 
-@app.cell(column=1)
+@app.cell(column=1, hide_code=True)
 def _(mo):
     mo.md("""
     # ⚙️ Processamento de Dados
@@ -200,7 +200,7 @@ def _():
     return (mo,)
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
     ## 2.1 Configuração do ambiente
@@ -235,7 +235,7 @@ def _():
     return mtick, np, pd, plt, sns
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
     ## 2.2 Carregamento e Processamento dos dados
@@ -246,7 +246,7 @@ def _(mo):
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
     ### 2.2.1 Carrega Base
@@ -274,7 +274,7 @@ def _(pd):
     return (df,)
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(mo):
     mo.md("""
     ### 2.2.2 Copia de Data RAW
@@ -288,7 +288,7 @@ def _(df):
     return (df_1,)
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(mo):
     mo.md("""
     ### 2.2.3 Total Charges para Numerico
@@ -313,7 +313,7 @@ def _(df_1, pd):
     return (df_2,)
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(mo):
     mo.md("""
     ### 2.2.4 Tratamento de Nulos
@@ -321,7 +321,7 @@ def _(mo):
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
     **Remoção de Nulos (Drop NA):**
@@ -336,7 +336,7 @@ def dropna_tranform(df_2):
     return (df_3,)
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
     ### 2.2.5 Categoriza Senior Citzen
@@ -344,7 +344,7 @@ def _(mo):
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
     **Senioridade Categórica:**
@@ -361,7 +361,7 @@ def seniorcitzen_transform(df_3):
     return (df_4,)
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(mo):
     mo.md("""
     ### 2.2.6 Criação dos Atributos RFM
@@ -389,7 +389,7 @@ def _(df_4):
     return (df_5,)
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(mo):
     mo.md("""
     ### 2.2.7 Segmentação por Tempo de Vida (Recency)
@@ -416,7 +416,7 @@ def _(df_5, pd):
     return (df_6,)
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(mo):
     mo.md("""
     ### 2.2.8 Segmentação por Ticket Médio (Monetary)
@@ -436,7 +436,7 @@ def _(df_6, pd):
     return (df_7,)
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(mo):
     mo.md("""
     ### 2.2.9 Segmentação por Serviços Contratados (Frequency)
@@ -461,7 +461,7 @@ def _(df_7, pd):
     return (df_8,)
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(mo):
     mo.md("""
     ### 2.2.10 Criação da Target Binária
@@ -475,7 +475,7 @@ def _(df_8):
     return (df_eda,)
 
 
-@app.cell(column=2)
+@app.cell(column=2, hide_code=True)
 def _(mo):
     mo.md("""
     # 3. Análise Exploratória de Dados
@@ -483,7 +483,7 @@ def _(mo):
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
     ## 3.1 Describe da Base
@@ -512,7 +512,7 @@ def _(df):
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
     ## 3.2 Detectando Missings
@@ -538,7 +538,7 @@ def missing_analysis(df_2, pd):
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
     **Como tratar esses dados nulos?**
@@ -550,7 +550,7 @@ def _(mo):
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
     ## 3.3 Análise da variável target (`Churn`)
@@ -567,7 +567,7 @@ def _(df, df_3):
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
     **Atributo Churn é uma string**, iremos transforma-lá em 0,1 para facilitar a análise.
@@ -582,7 +582,7 @@ def distr_target(df_eda, plt):
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
     **Variável Target:** A variável alvo `Churn` está desbalanceada (ratio ~0.36), o que reforça a necessidade de avaliar métricas além de acurácia.
@@ -590,7 +590,7 @@ def _(mo):
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
     ## 3.4 Análise das features categóricas
@@ -623,7 +623,7 @@ def _(cat_dropdown, df_eda, mtick, plt):
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
     **Principais Insights das Features Categóricas:**
@@ -638,7 +638,7 @@ def _(mo):
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
     ## 3.5 Análise de Outliers
@@ -671,7 +671,7 @@ def _(df_eda, np, num_dropdown, pd, plt, sns):
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
     **Outliers:** Nenhum outlier crítico detectado nas variáveis numéricas.
@@ -679,7 +679,7 @@ def _(mo):
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
     ## 3.6 Análise de anomalias e duplicados
@@ -737,7 +737,7 @@ def _(df_eda):
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
     **Anomalias e Consistência:** Nenhuma anomalia de domínio detectada.
@@ -745,7 +745,7 @@ def _(mo):
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
     ## 3.7 Análise de distribuições
@@ -798,7 +798,7 @@ def assimetria_analysis(df_eda, np, pd, plt):
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
     **Distribuições:** `tenure` apresenta distribuição **bimodal** (muitos clientes novos com tenure baixo e clientes fidelizados com tenure alto), refletindo dois perfis distintos de comportamento. `MonthlyCharges` tem leve assimetria à direita. `TotalCharges` é fortemente assimétrico à direita.
@@ -806,7 +806,7 @@ def _(mo):
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
     ## 3.8 Análise de correlações (data readiness)
@@ -820,7 +820,7 @@ def correlation_analysis(df_eda, pd, plt, sns):
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
     **Insights da Matriz de Correlação:**
@@ -832,7 +832,7 @@ def _(mo):
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
     ## 3.9 Análise de Churn vs Features
@@ -862,7 +862,7 @@ def _(df_eda, num_kde_dropdown, plot_single_numeric_kde, plt, sns):
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
     **Variáveis Numéricas vs Churn (KDE):** As curvas de densidade mostram claramente como os perfis se separam:
@@ -900,7 +900,7 @@ def _(churn_cat_dropdown, df_eda, mtick, pd, plt):
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
     **Insights Direcionáveis: Churn vs. Atributos Categóricos**
@@ -923,7 +923,7 @@ def _(mo):
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
     ## 3.10 Segmentação RFM Implícita (Análise por Tempo de Vida)
@@ -985,7 +985,7 @@ def _(df_eda, pd, plt):
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
     **Insights da Segmentação RFM (Recency, Frequency, Monetary):**
@@ -1009,7 +1009,7 @@ def _(mo):
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
     ## 3.11 Análise Avançada RFM (Recency × Frequency × Monetary)
@@ -1019,7 +1019,7 @@ def _(mo):
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(mo):
     rfm_segments = ["tenure_segment", "monetary_segment", "service_segment"]
     rfm_dropdown = mo.ui.dropdown(
@@ -1046,7 +1046,7 @@ def _(df_eda, pd, plot_rfm_heatmap, plt, sns):
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
     **Insights Avançados da Segmentação RFM:**
@@ -1059,7 +1059,7 @@ def _(mo):
     return
 
 
-@app.cell(column=3)
+@app.cell(column=3, hide_code=True)
 def _(mo):
     mo.md("""
     # 4. 🛠️ Funções Auxiliares
