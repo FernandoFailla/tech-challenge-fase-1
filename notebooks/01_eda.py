@@ -58,7 +58,7 @@ def _(mo):
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(mo, plt):
     # Gráfico Executivo: O Perfil de Alto Risco
     fig_exec, ax_exec = plt.subplots(figsize=(6, 4))
@@ -122,7 +122,7 @@ def _(mo):
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(df_eda, pd, plt, sns):
     # Heatmap RFM Executivo: Tenure vs MonthlyCharges
     fig_rfm_exec, ax_rfm_exec = plt.subplots(figsize=(8, 5))
@@ -208,7 +208,7 @@ def _(mo):
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _():
     from __future__ import annotations
 
@@ -261,13 +261,13 @@ def _(pd):
     local_path = "data/raw/WA_Fn-UseC_-Telco-Customer-Churn.csv"
     public_url = "https://raw.githubusercontent.com/IBM/telco-customer-churn-on-icp4d/master/data/Telco-Customer-Churn.csv"
 
-    # try:
-    #    df = pd.read_csv(local_path)
-    #    print(f"✓ Dataset carregado do arquivo local: {local_path}")
-    # except (FileNotFoundError, OSError):
-    print(f"⚠ Arquivo local não encontrado. Carregando da URL pública...")
-    df = pd.read_csv(public_url)
-    print(f"✓ Dataset carregado da URL: {public_url}")
+    try:
+         df = pd.read_csv(local_path)
+         print(f"✓ Dataset carregado do arquivo local: {local_path}")
+    except (FileNotFoundError, OSError):
+         print(f"⚠ Arquivo local não encontrado. Carregando da URL pública...")
+         df = pd.read_csv(public_url)
+         print(f"✓ Dataset carregado da URL: {public_url}")
 
     print(f"Shape dos dados: {df.shape}")
     df.head()
@@ -598,7 +598,7 @@ def _(mo):
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def distr_feat_cat(df_eda, mo):
     cat_cols = (
         df_eda.select_dtypes(include="object")
@@ -646,7 +646,7 @@ def _(mo):
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def outlier_analysis(df_eda, mo):
     num_cols = (
         df_eda.select_dtypes(include=["number"])
@@ -687,7 +687,7 @@ def _(mo):
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(df_eda):
     print("=== ANOMALIAS E CONSISTÊNCIA ===\n")
     anomalies = []
@@ -753,7 +753,7 @@ def _(mo):
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def assimetria_analysis(df_eda, np, pd, plt):
     numeric_cols = (
         df_eda.select_dtypes(include=["number"])
@@ -933,7 +933,7 @@ def _(mo):
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(df_eda, pd, plt):
     # Gráfico de Churn por Segmento de Tenure (RFM - Recency)
     fig_seg, ax_seg = plt.subplots(figsize=(10, 6))
@@ -1288,7 +1288,7 @@ def plot_churn_by_categorical(df, feature_col, plt, mtick, pd):
     return plt.gcf()
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _():
     def plot_churn_by_rfm_segment(df, segment_col, plt, mtick, pd):
         if not segment_col:
