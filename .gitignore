@@ -59,3 +59,10 @@ logs/
 
 # AI Jail - Conf customizada
 .ai-jail
+
+# Marimo WASM generated files
+docs/
+!docs/.nojekyll
+!docs/_config.yml
+!docs/telco_customer_churn_data_dictionary.md
+!docs/.gitkeep
