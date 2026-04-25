@@ -310,10 +310,6 @@ def _(df_1, pd):
     df_2 = df_1.assign(
         TotalCharges=pd.to_numeric(df_1["TotalCharges"], errors="coerce")
     )
-    print("✓ TotalCharges convertido para numérico")
-    print(f"  Tipo: {df_2['TotalCharges'].dtype}")
-    print(f"  Nulos gerados: {df_2['TotalCharges'].isnull().sum()}")
-    df_2[["TotalCharges"]].head()
     return (df_2,)
 
 
@@ -336,14 +332,7 @@ def _(mo):
 
 @app.cell
 def dropna_tranform(df_2):
-    linhas_antes = len(df_2)
     df_3 = df_2.dropna()
-    linhas_removidas = linhas_antes - len(df_3)
-    print(
-        f"✓ Linhas removidas (nulos): {linhas_removidas} ({linhas_removidas / linhas_antes:.2%})"
-    )
-    print(f"  Shape resultante: {df_3.shape}")
-    df_3.head()
     return (df_3,)
 
 
@@ -369,9 +358,6 @@ def seniorcitzen_transform(df_3):
     df_4 = df_3.assign(
         SeniorCitizen=df_3["SeniorCitizen"].map({0: "No", 1: "Yes"})
     )
-    print("✓ SeniorCitizen categorizado:")
-    print(df_4["SeniorCitizen"].value_counts())
-    df_4.head()
     return (df_4,)
 
 
@@ -400,9 +386,6 @@ def _(df_4):
         rfm_frequency=(df_4[service_cols] == "Yes").sum(axis=1),
         rfm_monetary=df_4["MonthlyCharges"],
     )
-    print("✓ Atributos RFM criados:")
-    print(df_5[["rfm_recency", "rfm_frequency", "rfm_monetary"]].describe())
-    df_5.head()
     return (df_5,)
 
 
@@ -430,9 +413,6 @@ def _(df_5, pd):
             include_lowest=True,
         )
     )
-    print("✓ Segmentação por Tempo de Vida:")
-    print(df_6["tenure_segment"].value_counts().sort_index())
-    df_6.head()
     return (df_6,)
 
 
@@ -453,9 +433,6 @@ def _(df_6, pd):
             labels=["Econômico", "Padrão", "Premium"],
         )
     )
-    print("✓ Segmentação Monetária:")
-    print(df_7["monetary_segment"].value_counts().sort_index())
-    df_7.head()
     return (df_7,)
 
 
@@ -481,9 +458,6 @@ def _(df_7, pd):
             ],
         )
     )
-    print("✓ Segmentação por Serviços:")
-    print(df_8["service_segment"].value_counts().sort_index())
-    df_8.head()
     return (df_8,)
 
 
@@ -498,10 +472,6 @@ def _(mo):
 @app.cell
 def _(df_8):
     df_eda = df_8.assign(Churn_bin=(df_8["Churn"] == "Yes").astype(int))
-    print("✓ Target binária criada:")
-    print(df_eda["Churn_bin"].value_counts())
-    print(f"  Taxa de churn: {df_eda['Churn_bin'].mean():.1%}")
-    df_eda.head()
     return (df_eda,)
 
 
