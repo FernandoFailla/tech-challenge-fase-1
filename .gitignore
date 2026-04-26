@@ -61,6 +61,7 @@ logs/
 .ai-jail
 
 # Marimo WASM generated files
+notebooks/__marimo__/
 docs/
 !docs/.nojekyll
 !docs/_config.yml
