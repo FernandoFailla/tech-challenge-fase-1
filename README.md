@@ -1,5 +1,7 @@
 # Tech Challenge — Fase 1
 
+[![Open EDA](https://img.shields.io/badge/Open-EDA%20Notebook-blue)](https://g13-mle.github.io/tech-challenge-fase-1/)
+
 Pipeline end-to-end de ML para previsão de churn em telecomunicações — MLP com PyTorch, baselines Scikit-Learn, rastreamento com MLflow e API de inferência com FastAPI. Tech Challenge Fase 1 · PÓS TECH FIAP.
 
 ## Contexto do problema
@@ -252,6 +254,26 @@ make help         # Mostrar todos os comandos disponíveis
 ### Acessar
 
 - MLflow UI: http://localhost:5000
+
+## EDA Interativo (Marimo)
+
+Notebook de exploração disponível online e localmente.
+
+**Online (WASM):** [https://g13-mle.github.io/tech-challenge-fase-1/](https://g13-mle.github.io/tech-challenge-fase-1/) — roda no navegador, sem backend Python.
+
+> Limitações WASM: overhead de performance e ~2GB de RAM.
+
+**Local:**
+
+```bash
+uv run marimo edit notebooks/01_eda.py
+```
+
+**Re-exportar versão WASM:**
+
+```bash
+uv run marimo export html-wasm notebooks/01_eda.py -o docs --mode run --force --sandbox
+```
 
 ## Roadmap / Próximos passos
 

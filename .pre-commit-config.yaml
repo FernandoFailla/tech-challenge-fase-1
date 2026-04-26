@@ -12,8 +12,10 @@ repos:
       # Linter
       - id: ruff
         args: [--fix, --exit-non-zero-on-fix]
+        exclude: ^notebooks/
       # Formatter
       - id: ruff-format
+        exclude: ^notebooks/
 
   # MyPy - Verificação de tipos
   - repo: https://github.com/pre-commit/mirrors-mypy
@@ -21,7 +23,7 @@ repos:
     hooks:
       - id: mypy
         args: [--config-file=pyproject.toml]
-        exclude: ^tests/
+        exclude: ^(tests|notebooks)/
         additional_dependencies: [fastapi, pydantic]
 
   # Verificações gerais
@@ -42,6 +44,9 @@ repos:
 # Configuração global
 default_language_version:
   python: python3.13
+
+# Excluir pasta docs/ de todas as verificações (arquivos gerados automaticamente)
+exclude: ^docs/
 
 # CI configuration
 ci:
