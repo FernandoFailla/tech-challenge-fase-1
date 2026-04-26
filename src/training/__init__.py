@@ -1,9 +1,17 @@
 from __future__ import annotations
 
-from src.training.early_stopping import EarlyStopping
-from src.training.trainer import Trainer
+from src.training.dummy_trainer import (
+    DummyTrainingConfig,
+    run_all_strategies,
+    train_dummy_strategy,
+)
+from src.training.mlp import MLP, MLPForTraining, MLPTrainer
 
 __all__ = [
-    "EarlyStopping",
-    "Trainer",
+    "MLP",
+    "DummyTrainingConfig",
+    "MLPForTraining",
+    "MLPTrainer",
+    "run_all_strategies",
+    "train_dummy_strategy",
 ]

@@ -20,7 +20,7 @@ from __future__ import annotations
 import torch
 from torch import nn
 
-from src.models.config import MLPConfig
+from src.configs.config import MLPConfig
 
 
 class MLP(nn.Module):

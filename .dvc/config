@@ -1,4 +1,0 @@
-[core]
-    remote = onedrive_remote
-['remote "onedrive_remote"']
-    url = /home/fernando/OneDrive/techchallenge-fase1

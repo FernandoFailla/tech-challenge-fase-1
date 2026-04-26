@@ -9,6 +9,24 @@ ML pipeline for telecom churn prediction. Python 3.12+, PyTorch MLP, scikit-lear
 - **Function over form** - working code beats perfect architecture
 - **Less is more** - fewer lines, fewer files, fewer dependencies
 
+### Code Sharing Between Experiments
+
+Three ML pipelines (dummy, MLP, logistic) share common infrastructure but keep experiment-specific code explicit:
+
+**Shared (extracted to modules):**
+- Data loading: `src.data.load.load_telco_data()`
+- Data split: `src.data.load.split_train_test_stratified()`
+- MLflow setup: `src.training.mlflow_tracking.setup_mlflow()`, `build_mlflow_inputs()`
+- Metrics: `src.training.metrics.compute_binary_classification_metrics()`
+
+**Duplicated OK (kept per-pipeline for clarity):**
+- Model-specific param logging (each model logs different values)
+- Preprocessing (Dummy uses strings, MLP uses numeric tensors)
+- Results post-processing (CSV comparison vs torch model saving)
+- CLI argument parsing (only where needed)
+
+**Rule:** Extract helpers only when genuinely identical AND extraction does not increase abstraction complexity. Prefer explicit duplication over clever abstractions.
+
 ## Commands
 
 Uses `uv` as package manager. Always prefix Python commands with `uv run`.
@@ -33,6 +51,22 @@ uv run mypy src/              # Type check (strict mode)
 make docker-up                # Start MLflow + PostgreSQL + MinIO
 make docker-down              # Stop containers
 ```
+
+## ML Experiments
+
+Three baseline experiments tracked in MLflow:
+
+| Experiment | Command | Status |
+|------------|---------|--------|
+| Dummy Baseline | `make train-dummy` or `uv run python -m src.pipelines.run_dummy_baseline` | Ready |
+| MLP | `make train-mlp` or `uv run python -m src.pipelines.run_mlp` | Ready |
+| Logistic Regression | `make train-logistic` (planned) | Future |
+
+All experiments share:
+- Data loading: `src.data.prepare_telco_dataset.load_telco_data()`
+- Split: `src.data.splitting.split_train_test_stratified()`
+- MLflow setup: `src.training.mlflow_tracking.setup_mlflow()`
+- Metrics: `src.training.metrics.compute_binary_classification_metrics()`
 
 ## Code Style (Strict)
 
@@ -61,6 +95,28 @@ except Exception as e:  # noqa: BLE001  # Rare, mark with noqa
 
 ## Project Structure
 
+### Gerenciamento de Ambiente
+- Use arquivo `.env` para configuração local (copie de `.env.example`)
+- Nunca commite arquivos `.env`
+- Use `python-dotenv` para carregar variáveis de ambiente
+- Docker Compose usa arquivo `.env` automaticamente
+
+### Dependências
+- Deps de produção: listadas em `[project] dependencies`
+- Deps de dev: listadas em `[dependency-groups] dev`
+- Use `uv add <package>` para adicionar dependências de produção
+- Use `uv add --dev <package>` para adicionar dependências de dev
+- Arquivo de lock `uv.lock` deve ser commitado
+
+### Fluxo de Trabalho Git
+- **NUNCA crie commits ou faça `git push` sozinho.** Sempre aguarde o usuário pedir ou deixe para que o usuário faça o commit e o push.
+- Hooks do pre-commit rodam automaticamente no commit
+- CI corrige automaticamente PRs com pre-commit
+- Use mensagens de commit convencionais
+
+## Arquitetura do Projeto
+
+### Estrutura de Diretórios
 ```
 src/
 ├── api/           # FastAPI (empty - .gitkeep)
@@ -88,6 +144,35 @@ docs/              # Documentation
 2. **All code needs type hints** - mypy runs in strict mode
 3. **Coverage minimum 80%** - enforced in CI via pyproject.toml
 4. **Test markers:** `@pytest.mark.fast` for quick tests, `@pytest.mark.slow` for integration
+5. **NO emojis anywhere** - use ASCII text equivalents (see Text Style section below)
+6. **NO unrequested documentation** - do not create .md files, CHANGELOGs, or docs unless explicitly asked
+7. **NO deprecated code** - if code is not used, remove it; do not keep "for future use" or "backward compatibility"
+
+## Text and Documentation Style
+
+**NO emojis in any file** - this includes source code, documentation, comments, commit messages, and shell scripts. Use ASCII text equivalents:
+
+| Instead of | Use |
+|------------|-----|
+| Checkmark | `[OK]`, `Success:`, `Done:` |
+| Cross | `[ERROR]`, `Error:` |
+| Warning | `[WARN]`, `Warning:` |
+| Whale | `Docker:` |
+| Rocket | `Starting...`, `Launching...` |
+| Lightbulb | `Tip:`, `Note:` |
+| Chart | `Results:`, `Metrics:` |
+| Target | `Goal:`, `Next:` |
+| Wrench | `Config:`, `Setup:` |
+| Folder | `Directory:`, `Folder:` |
+| Clipboard | `List:`, `Summary:` |
+
+**NO emoji in:**
+- Source code (Python files)
+- Documentation (README, AGENTS.md, etc)
+- Comments (inline or block)
+- Commit messages
+- Shell scripts (Makefile, .sh files)
+- Configuration files
 
 ## Environment Setup
 
@@ -99,7 +184,7 @@ cp .env.example .env          # Then edit with your values
 Key env vars:
 - `MLFLOW_TRACKING_URI=http://localhost:5000`
 - `MLFLOW_S3_ENDPOINT_URL=http://localhost:9000`
-- `MLFLOW_EXPERIMENT_NAME=tech-challenge-default`
+- `MLFLOW_DUMMY_EXPERIMENT_NAME=tech-challenge-dummy-baseline`
 - `DVC_ONEDRIVE_REMOTE_URL=` (set during `make setup`)
 
 ## MLflow Integration
@@ -123,3 +208,6 @@ with mlflow.start_run():
 - Lock file: `uv.lock` (must be committed)
 
 Key deps: fastapi, pandas, scikit-learn, torch, mlflow, pytest, ruff, mypy
+
+## Important
+- Always run make test and make lint after any code update

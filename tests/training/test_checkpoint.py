@@ -6,11 +6,7 @@ import pytest
 import torch
 from torch import nn
 
-from src.training.checkpoint import (
-    load_checkpoint,
-    save_best_model,
-    save_checkpoint,
-)
+from src.training.mlp.checkpoint import save_best_model
 
 
 class SimpleModel(nn.Module):
@@ -20,37 +16,6 @@ class SimpleModel(nn.Module):
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         return self.linear(x)
-
-
-@pytest.mark.fast
-def test_save_and_load_checkpoint(tmp_path: Path) -> None:
-    model = SimpleModel()
-    optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
-
-    checkpoint_path = tmp_path / "checkpoint.pt"
-    epoch = 5
-    best_score = 0.95
-
-    save_checkpoint(
-        model,
-        optimizer,
-        epoch=epoch,
-        best_score=best_score,
-        filepath=checkpoint_path,
-    )
-
-    assert checkpoint_path.exists()
-
-    new_model = SimpleModel()
-    new_optimizer = torch.optim.Adam(new_model.parameters(), lr=0.001)
-
-    checkpoint = load_checkpoint(checkpoint_path, new_model, new_optimizer)
-
-    assert checkpoint["epoch"] == epoch
-    assert checkpoint["best_score"] == best_score
-
-    for p1, p2 in zip(model.parameters(), new_model.parameters()):
-        assert torch.equal(p1, p2)
 
 
 @pytest.mark.fast

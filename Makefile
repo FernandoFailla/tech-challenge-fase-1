@@ -1,12 +1,12 @@
 # Makefile para o TechChallenge Fase 1
 # Comandos essenciais para desenvolvimento
 
-.PHONY: setup test lint format help docker-up docker-down train
+.PHONY: setup test lint format help docker-up docker-down api-up api-down api-test train train-dummy train-mlp train-logistic
 
 # Verifica se o arquivo .env existe
 CHECK_ENV := $(shell test -f .env && echo 1 || echo 0)
 ifeq ($(CHECK_ENV),0)
-  ENV_ERROR = @echo "❌ ERRO: Arquivo .env não encontrado!" && echo "👉 Copie .env.example para .env:" && echo "   cp .env.example .env" && echo "" && exit 1
+  ENV_ERROR = @echo "[ERROR] ERRO: Arquivo .env não encontrado!" && echo "Tip: Copie .env.example para .env:" && echo "   cp .env.example .env" && echo "" && exit 1
 endif
 
 # Help padrao
@@ -19,6 +19,9 @@ help:
 	@echo "Docker:"
 	@echo "  make docker-up  - Iniciar MLflow em background (requer .env)"
 	@echo "  make docker-down - Parar todos os containers MLflow"
+	@echo "  make api-up     - Iniciar API FastAPI em background com hot-reload"
+	@echo "  make api-down   - Parar container da API"
+	@echo "  make api-test   - Testar endpoint de predição via cURL"
 	@echo ""
 	@echo "Desenvolvimento:"
 	@echo "  make test       - Rodar testes"
@@ -26,7 +29,10 @@ help:
 	@echo "  make format     - Formatar codigo com ruff"
 	@echo ""
 	@echo "ML:"
-	@echo "  make train      - Treinar modelo MLP (requer .env + MLflow)"
+	@echo "  make train      - Treinar todos os modelos (requer .env + MLflow)"
+	@echo "  make train-dummy - Treinar baseline DummyClassifier"
+	@echo "  make train-mlp  - Treinar modelo MLP (requer .env + MLflow)"
+	@echo "  make train-logistic - Treinar modelo Logistic Regression (futuro)"
 	@echo ""
 
 # Setup inicial
@@ -53,10 +59,10 @@ setup:
 		URL="$$user_input"; \
 	fi; \
 	if [ -n "$$URL" ]; then \
-		dvc remote modify onedrive_remote url "$$URL"; \
-		echo "✅ DVC remote configurado para: $$URL"; \
+		dvc remote add -d onedrive_remote "$$URL"; \
+		echo "[OK] DVC remote configurado para: $$URL"; \
 	else \
-		echo "⚠️ Aviso: URL remota do DVC nao definida."; \
+		echo "[WARN] Aviso: URL remota do DVC nao definida."; \
 	fi
 	@echo "Setup concluido!"
 
@@ -75,22 +81,66 @@ format:
 	@echo "Formatando codigo com ruff..."
 	uv run ruff format .
 
-# Treinar modelo MLP
-train:
-	$(ENV_ERROR)
-	@echo "Treinando modelo MLP..."
-	uv run python -m src.pipelines.train
-	@echo "Treinamento concluido!"
-
 # Iniciar Docker em background
 docker-up:
 	$(ENV_ERROR)
-	@echo "🐳 Iniciando MLflow em background..."
+	@echo "Docker: Iniciando MLflow em background..."
 	docker compose -f docker/docker-compose.yml --env-file .env up -d
-	@echo "✅ MLflow iniciado! Acesse http://localhost:$$(grep -E '^MLFLOW_PORT=' .env | cut -d '=' -f2) para usar."
+	@echo "[OK] MLflow iniciado! Acesse http://localhost:$$(grep -E '^MLFLOW_PORT=' .env | cut -d '=' -f2) para usar."
 
 # Parar Docker
 docker-down:
-	@echo "🛑 Parando containers MLflow..."
+	@echo "[STOP] Pararando containers MLflow..."
 	docker compose -f docker/docker-compose.yml --env-file .env down
+	@echo "[OK] Containers parados!"
+
+# Treinar todos os modelos
+train:
+	$(ENV_ERROR)
+	@echo "Treinando todos os modelos..."
+	make train-dummy
+	make train-mlp
+	@echo "Todos os treinamentos concluidos!"
+
+# Treinar baseline DummyClassifier
+train-dummy:
+	$(ENV_ERROR)
+	@echo "Treinando baseline DummyClassifier..."
+	uv run python -m src.pipelines.run_dummy_baseline
+	@echo "Baseline DummyClassifier concluido!"
+
+# Treinar modelo MLP
+train-mlp:
+	$(ENV_ERROR)
+	@echo "Treinando modelo MLP..."
+	uv run python -m src.pipelines.run_mlp
+	@echo "Treinamento MLP concluido!"
+
+# Futuro: Treinar modelo Logistic Regression
+train-logistic:
+	$(ENV_ERROR)
+	@echo "Treinando modelo Logistic Regression..."
+	@echo "[WARN] Modelo ainda em desenvolvimento"
+	@echo "Proximo passo: criar src/pipelines/train_logistic.py"
+	@echo "Treinamento Logistic Regression concluido!"
 	@echo "✅ Containers parados!"
+
+# Iniciar API no Docker
+api-up:
+	@echo "🚀 Iniciando API em background com hot-reload..."
+	docker compose -f docker/docker-compose.api.yml up --build -d
+	@echo "✅ API iniciada! Acesse o Swagger em http://localhost:$${API_PORT:-8000}/docs"
+
+# Parar API
+api-down:
+	@echo "🛑 Parando container da API..."
+	docker compose -f docker/docker-compose.api.yml down
+	@echo "✅ API parada!"
+
+# Testar API
+api-test:
+	@echo "🧪 Testando endpoint de predição (/predict)..."
+	curl -X POST "http://localhost:$${API_PORT:-8000}/predict" \
+	     -H "Content-Type: application/json" \
+	     -d '{"customerID": "1234-ABCD", "tenure": 5, "MonthlyCharges": 50.0, "Contract": "Month-to-month"}'
+	@echo "\n✅ Teste concluído!"

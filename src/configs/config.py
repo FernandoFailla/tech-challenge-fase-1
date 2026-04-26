@@ -10,6 +10,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from src.constants import RANDOM_SEED
+
 
 @dataclass(frozen=True)
 class MLPConfig:
@@ -112,4 +114,4 @@ class TrainingConfig:
     batch_size: int = 32
     max_epochs: int = 100
     val_split: float = 0.2
-    random_seed: int = 42
+    random_seed: int = RANDOM_SEED

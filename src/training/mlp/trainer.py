@@ -1,6 +1,6 @@
 """Loop de treino principal para modelo MLP com integração MLflow.
 
-Este módulo implementa o Trainer, que orquestra o treino do modelo MLP.
+Este módulo implementa o MLPTrainer, que orquestra o treino do modelo MLP.
 Inclui:
 - Loop de treino com validação
 - Detecção automática de dispositivo (GPU/CPU)
@@ -21,18 +21,17 @@ from torch.optim import SGD, Adam
 from torch.optim.lr_scheduler import ReduceLROnPlateau, StepLR
 from torch.utils.data import DataLoader, TensorDataset
 
-from src.models.config import TrainingConfig
-from src.models.metrics import ClassificationMetrics
-from src.models.mlp import MLPForTraining
-from src.training.checkpoint import save_best_model
-from src.training.early_stopping import EarlyStopping
+from src.configs.config import TrainingConfig
+from src.constants import THRESHOLD
+from src.training.metrics import compute_binary_classification_metrics
+from src.training.mlp.checkpoint import save_best_model
+from src.training.mlp.early_stopping import EarlyStopping
+from src.training.mlp.model import MLPForTraining
 
 logger = logging.getLogger(__name__)
 
-THRESHOLD: float = 0.5
 
-
-class Trainer:
+class MLPTrainer:
     """Orquestrador de treino para modelo MLP.
 
     Esta classe gerencia todo o ciclo de vida do treino: configuração do
@@ -50,7 +49,7 @@ class Trainer:
 
     Exemplo:
         >>> config = TrainingConfig(lr=0.001, batch_size=64)
-        >>> trainer = Trainer(model, config)
+        >>> trainer = MLPTrainer(model, config)
         >>> history = trainer.fit(X_train, y_train)
         >>> trainer.log_to_mlflow()
     """
@@ -61,7 +60,7 @@ class Trainer:
         config: TrainingConfig,
         device: str = "auto",
     ) -> None:
-        """Inicializa o Trainer com modelo e configuração.
+        """Inicializa o MLPTrainer com modelo e configuração.
 
         Configura automaticamente o dispositivo (GPU/CPU), otimizador,
         scheduler e callbacks de treino.
@@ -160,10 +159,7 @@ class Trainer:
             Histórico de treino com métricas por época:
             {'train_loss': [...], 'val_loss': [...], 'val_f1': [...], ...}
         """
-        # Define seed para reprodutibilidade
-        torch.manual_seed(self.config.random_seed)
-
-        # Cria split de validação se não fornecido
+        # Cria split de validacao se nao fornecido
         if X_val is None or y_val is None:
             val_size = int(len(X_train) * self.config.val_split)
             indices = np.random.permutation(len(X_train))
@@ -210,15 +206,15 @@ class Trainer:
             # Registra métricas no histórico
             self.history["train_loss"].append(train_loss)
             self.history["val_loss"].append(val_loss)
-            self.history["val_f1"].append(val_metrics["f1"])
-            if "auc_roc" in val_metrics:
-                self.history["val_auc"].append(val_metrics["auc_roc"])
+            self.history["val_f1"].append(val_metrics["f1_score"])
+            if "roc_auc" in val_metrics:
+                self.history["val_auc"].append(val_metrics["roc_auc"])
 
             logger.info(
                 f"Epoch {epoch + 1}/{self.config.max_epochs} - "
                 f"Train Loss: {train_loss:.4f} - "
                 f"Val Loss: {val_loss:.4f} - "
-                f"Val F1: {val_metrics['f1']:.4f}"
+                f"Val F1: {val_metrics['f1_score']:.4f}"
             )
 
             # Atualiza learning rate se houver scheduler
@@ -285,7 +281,10 @@ class Trainer:
 
     def _validate(
         self, loader: DataLoader[Any]
-    ) -> tuple[float, dict[str, float]]:
+    ) -> tuple[
+        float,
+        dict[str, float],
+    ]:
         """Executa validação em um epoch.
 
         Args:
@@ -324,10 +323,12 @@ class Trainer:
         avg_loss = total_loss / num_batches
 
         # Calcula métricas no conjunto completo de validação
-        metrics = ClassificationMetrics.compute(
-            np.concatenate(all_targets),
-            np.concatenate(all_preds),
-            np.concatenate(all_probs),
+        # positive_label=None indica dados já numéricos (0/1)
+        metrics = compute_binary_classification_metrics(
+            y_true=np.concatenate(all_targets),
+            y_pred=np.concatenate(all_preds),
+            y_proba_positive=np.concatenate(all_probs),
+            positive_label=None,
         )
 
         return avg_loss, metrics

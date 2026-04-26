@@ -185,10 +185,10 @@ MLFLOW_TRACKING_URI=http://localhost:5000
 MLFLOW_S3_ENDPOINT_URL=http://localhost:9000
 AWS_ACCESS_KEY_ID=minioadmin
 AWS_SECRET_ACCESS_KEY=minioadmin_secret_key_2024
-MLFLOW_EXPERIMENT_NAME=tech-challenge-default
+MLFLOW_DUMMY_EXPERIMENT_NAME=tech-challenge-dummy-baseline
 ```
 
-> 🔒 Segurança: nunca versionar o arquivo `.env` com credenciais reais.
+> Security: nunca versionar o arquivo `.env` com credenciais reais.
 
 ## Comandos básicos
 
@@ -235,10 +235,10 @@ Para treinar o modelo MLP (Multi-Layer Perceptron) com PyTorch:
 make train
 
 # Opção 2: Executando diretamente com uv
-uv run python -m src.pipelines.train
+uv run python -m src.pipelines.train_mlp
 
 # Opção 3: Com argumentos customizados
-uv run python -m src.pipelines.train \
+uv run python -m src.pipelines.train_mlp \
     --input data/raw/WA_Fn-UseC_-Telco-Customer-Churn.csv \
     --experiment-name churn-mlp-v1
 ```
@@ -254,6 +254,16 @@ uv run python -m src.pipelines.train \
 **Métricas geradas:**
 - Acurácia, Precisão, Recall, F1-Score, AUC-ROC
 - Visualização no MLflow UI (http://localhost:5000)
+
+### API (FastAPI)
+
+Para testar e desenvolver a API localmente com hot-reload, utilize os seguintes comandos:
+
+```bash
+make api-up       # Sobe o container da API (acessível em http://localhost:8000/docs)
+make api-test     # Envia um payload de teste para o endpoint /predict via cURL
+make api-down     # Para o container da API
+```
 
 ### Desenvolvimento
 
@@ -290,7 +300,7 @@ Marcos críticos:
 
 ## Boas práticas e módulos previstos (baseado na Issue #3)
 
-> ✅ **Status:** esta seção descreve direcionadores e componentes **previstos** para evolução do projeto.
+> [OK] **Status:** esta seção descreve direcionadores e componentes **previstos** para evolução do projeto.
 
 Boas práticas de engenharia previstas:
 

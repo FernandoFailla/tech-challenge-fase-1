@@ -1,0 +1,292 @@
+"""Pipeline de treino para modelo MLP (Multi-Layer Perceptron).
+
+Este script orquestra o treinamento do modelo MLP para predicao de churn:
+1. Carregamento dos dados brutos do dataset Telco Customer Churn
+2. Preprocessamento (codificacao, escalonamento SEM data leakage)
+3. Divisao treino/teste estratificada
+4. Configuracao e treino do modelo MLP
+5. Avaliacao no conjunto de teste
+6. Logging de metricas e modelo no MLflow
+
+Como usar:
+    $ uv run python -m src.pipelines.run_mlp
+    $ uv run python -m src.pipelines.run_mlp --input path/to/data.csv
+    $ uv run python -m src.pipelines.run_mlp --experiment-name churn-mlp-v2
+
+Requerimentos:
+    - Arquivo .env configurado com MLFLOW_TRACKING_URI
+    - Dados na estrutura esperada (veja load_telco_data)
+"""
+
+from __future__ import annotations
+
+import argparse
+import logging
+import os
+from pathlib import Path
+
+import mlflow
+import numpy as np
+import pandas as pd
+import torch
+
+from src.configs.config import MLPConfig, TrainingConfig
+
+# Limiar para converter probabilidades em predicoes binarias
+from src.constants import (
+    DEFAULT_DATASET_PATH,
+    DEFAULT_MLP_EXPERIMENT_NAME,
+    RANDOM_SEED,
+    TARGET_COLUMN,
+    THRESHOLD,
+)
+from src.data.load import load_telco_data
+from src.data.preprocessing import (
+    apply_scaling,
+    fit_scaler,
+    mlp_preprocess_data,
+    save_scaler,
+)
+from src.data.splitting import split_train_test_stratified
+from src.data.validation import validate_required_columns
+from src.pipelines.common import (
+    get_experiment_name,
+    load_dotenv_silent,
+    safe_get_dataset_version,
+)
+from src.training import MLPForTraining, MLPTrainer
+from src.training.metrics import compute_binary_classification_metrics
+from src.training.mlflow_tracking import (
+    MLflowConfig,
+    TrainTestData,
+    build_mlflow_inputs,
+    setup_mlflow,
+)
+
+logger = logging.getLogger(__name__)
+
+
+def main() -> None:  # noqa: PLR0914, PLR0915
+    """Funcao principal que executa o pipeline de treino completo.
+
+    Orquestra todo o fluxo de ML:
+    1. Parse de argumentos da linha de comando
+    2. Carregamento e preprocessamento de dados
+    3. Configuracao do modelo e treinamento
+    4. Avaliacao no conjunto de teste
+    5. Logging no MLflow
+
+    Argumentos CLI:
+        --input: Caminho para o dataset CSV
+            (default: data/raw/WA_Fn-UseC_-Telco-Customer-Churn.csv)
+        --experiment-name: Nome do experimento no MLflow
+
+    Requerimentos de ambiente:
+        - Arquivo .env com MLFLOW_TRACKING_URI
+        - MLflow server rodando (iniciar com make docker-up)
+    """
+    # Configura argumentos de linha de comando
+    parser = argparse.ArgumentParser(
+        description="Treina modelo MLP para predicao de churn"
+    )
+    parser.add_argument(
+        "--input",
+        default=DEFAULT_DATASET_PATH,
+        help="Caminho para o dataset de entrada",
+    )
+    parser.add_argument(
+        "--experiment-name",
+        default=None,
+        help="Nome do experimento no MLflow",
+    )
+    args = parser.parse_args()
+
+    # Carrega variaveis de ambiente (.env)
+    load_dotenv_silent()
+
+    # === SEED GLOBAL PARA REPRODUTIBILIDADE ===
+    # Define seed no inicio do pipeline para garantir reproducibilidade
+    # em todas as operacoes randomicas (split, inicializacao de pesos, etc)
+    logger.info(f"Definindo seed global: {RANDOM_SEED}")
+    torch.manual_seed(RANDOM_SEED)
+    np.random.seed(RANDOM_SEED)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed_all(RANDOM_SEED)
+        torch.backends.cudnn.deterministic = True
+        torch.backends.cudnn.benchmark = False
+
+    # Configura MLflow via modulo generico
+    experiment_name = get_experiment_name(
+        cli_arg=args.experiment_name,
+        env_var_name="MLFLOW_MLP_EXPERIMENT_NAME",
+        default_name=DEFAULT_MLP_EXPERIMENT_NAME,
+    )
+    mlflow_config = MLflowConfig(
+        tracking_uri=os.getenv("MLFLOW_TRACKING_URI", "http://localhost:5000"),
+        experiment_name=experiment_name,
+    )
+    setup_mlflow(mlflow_config)
+
+    # === 1. CARREGAMENTO DE DADOS ===
+    logger.info(f"Carregando dados de {args.input}")
+    df = load_telco_data(args.input)
+
+    # Validacao de dados
+    validate_required_columns(df, TARGET_COLUMN)
+
+    # === 2. PREPROCESSAMENTO (SEM SCALING AINDA) ===
+    logger.info("Preprocessando dados (one-hot encoding)")
+    # Preprocessamento: one-hot encoding, mas SEM scaling (evita data leakage)
+    X, y, feature_names, _df_processed = mlp_preprocess_data(df)
+
+    # === 3. DIVISAO TREINO/TESTE ===
+    logger.info(f"Dividindo dados: treino/teste com seed={RANDOM_SEED}")
+    # Cria DataFrame temporario para usar split estratificado
+    df_for_split = pd.DataFrame(X)
+    df_for_split[TARGET_COLUMN] = y
+
+    X_train_df, X_test_df, y_train, y_test = split_train_test_stratified(
+        df_for_split,
+        TARGET_COLUMN,
+        test_size=0.2,
+        random_seed=RANDOM_SEED,
+    )
+
+    # Converte para numpy arrays
+    X_train = X_train_df.values
+    X_test = X_test_df.values
+
+    # === 4. SCALING (APOS SPLIT - SEM DATA LEAKAGE) ===
+    logger.info("Aplicando StandardScaler (fit apenas no treino)")
+    # Fit scaler APENAS no treino - evita data leakage
+    scaler = fit_scaler(X_train)
+    # Aplica transform em treino e teste
+    X_train_scaled = apply_scaling(X_train, scaler)
+    X_test_scaled = apply_scaling(X_test, scaler)
+
+    # Converte target para float32 (PyTorch)
+    y_train_arr: np.ndarray = np.asarray(y_train.values, dtype=np.float32)
+    y_test_arr: np.ndarray = np.asarray(y_test.values, dtype=np.float32)
+
+    logger.info(f"Conjunto de treino: {X_train_scaled.shape[0]} amostras")
+    logger.info(f"Conjunto de teste: {X_test_scaled.shape[0]} amostras")
+    logger.info(f"Numero de features: {X_train_scaled.shape[1]}")
+
+    # Prepara lineage de dados para MLflow
+    train_test_data = TrainTestData(
+        X_train=X_train_df,
+        X_test=X_test_df,
+        y_train=y_train_arr,
+        y_test=y_test_arr,
+    )
+
+    # Obtem versao do dataset via DVC
+    dataset_version = safe_get_dataset_version()
+
+    train_input, test_input = build_mlflow_inputs(
+        train_test_data,
+        TARGET_COLUMN,
+        dataset_version,
+        dataset_source_path=args.input,
+    )
+
+    # === 5. CONFIGURACAO DO MODELO ===
+    mlp_config = MLPConfig(
+        input_dim=X_train_scaled.shape[1],
+        hidden_dims=(128, 64, 32),
+        dropout_rate=0.3,
+        use_batch_norm=True,
+    )
+
+    training_config = TrainingConfig(
+        optimizer="adam",
+        lr=0.001,
+        weight_decay=1e-5,
+        scheduler="reduce_on_plateau",
+        scheduler_patience=3,
+        early_stopping_patience=5,
+        early_stopping_min_delta=0.001,
+        batch_size=64,
+        max_epochs=100,
+        val_split=0.2,
+        random_seed=RANDOM_SEED,
+    )
+
+    # === 6. TREINAMENTO COM MLFLOW ===
+    with mlflow.start_run():
+        # Log inputs de dados
+        mlflow.log_input(train_input, context="training")  # type: ignore[arg-type]
+        mlflow.log_input(test_input, context="testing")  # type: ignore[arg-type]
+
+        # Registra parametros da arquitetura
+        mlflow.log_params(
+            {
+                "input_dim": mlp_config.input_dim,
+                "hidden_dims": str(mlp_config.hidden_dims),
+                "dropout_rate": mlp_config.dropout_rate,
+                "use_batch_norm": mlp_config.use_batch_norm,
+                "model_type": "MLP",
+                "random_seed": RANDOM_SEED,
+                "dataset_version": dataset_version,
+            }
+        )
+
+        # Log de preprocessamento
+        mlflow.log_param("preprocessing", "one_hot_encoding")
+        mlflow.log_param("scaling", "StandardScaler")
+        mlflow.log_param("scaling_fit_on", "train_only")
+        mlflow.log_param("num_features", len(feature_names))
+
+        # Inicializa modelo e trainer
+        model = MLPForTraining(mlp_config)
+        trainer = MLPTrainer(model, training_config)
+
+        # Treina com validacao e early stopping
+        logger.info("Iniciando treinamento")
+        model_save_path = Path("models/churn_mlp_best.pt")
+        _history = trainer.fit(
+            X_train_scaled, y_train_arr, model_save_path=str(model_save_path)
+        )
+
+        # Registra metricas de treino no MLflow
+        trainer.log_to_mlflow()
+
+        logger.info("Treinamento concluido")
+
+        # === 7. AVALIACAO NO CONJUNTO DE TESTE ===
+        model.model.eval()
+        with torch.no_grad():
+            X_test_tensor = torch.tensor(
+                X_test_scaled, dtype=torch.float32
+            ).to(trainer.device)
+            outputs = model(X_test_tensor)
+            probs = outputs["probs"].cpu().numpy()
+            preds = (probs > THRESHOLD).astype(int)
+
+        test_metrics = compute_binary_classification_metrics(
+            y_true=y_test_arr,
+            y_pred=preds,
+            y_proba_positive=probs,
+            positive_label=None,
+        )
+        logger.info(f"Metricas de teste: {test_metrics}")
+
+        # Registra metricas de teste no MLflow
+        for metric_name, metric_value in test_metrics.items():
+            mlflow.log_metric(f"test_{metric_name}", metric_value)
+
+        # Salva modelo no MLflow registry
+        mlflow.pytorch.log_model(model, "model")
+
+        # Salva scaler para inferencia
+        scaler_path = Path("models/scaler.pkl")
+        save_scaler(scaler, str(scaler_path))
+        mlflow.log_artifact(str(scaler_path), artifact_path="preprocessing")
+        logger.info(f"Scaler salvo em {scaler_path}")
+
+        logger.info(f"Modelo salvo em {model_save_path}")
+
+
+if __name__ == "__main__":  # pragma: no cover
+    logging.basicConfig(level=logging.INFO)
+    main()

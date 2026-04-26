@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from src.training.early_stopping import EarlyStopping
+from src.training.mlp.early_stopping import EarlyStopping
 
 
 @pytest.mark.fast
