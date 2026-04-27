@@ -3639,6 +3639,7 @@ dependencies = [
     { name = "optuna" },
     { name = "pandas" },
     { name = "protobuf" },
+    { name = "python-json-logger" },
     { name = "scikit-learn" },
 ]
 
@@ -3669,6 +3670,7 @@ requires-dist = [
     { name = "optuna", specifier = ">=4.8.0" },
     { name = "pandas", specifier = ">=2.3.3" },
     { name = "protobuf", specifier = "<5.0.0" },
+    { name = "python-json-logger", specifier = ">=3.2.1" },
     { name = "scikit-learn", specifier = ">=1.8.0" },
 ]
 

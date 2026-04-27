@@ -89,9 +89,7 @@ def one_hot_encode(
         DataFrame com colunas categoricas codificadas
     """
     if categorical_cols is None:
-        categorical_cols = df.select_dtypes(
-            include=["object"]
-        ).columns.tolist()
+        categorical_cols = df.select_dtypes(include=["object"]).columns.tolist()
 
     if not categorical_cols:
         return df.copy()
@@ -110,7 +108,7 @@ def split_features_target(
     """Separa DataFrame em features (X) e target (y).
 
     Args:
-        df: DataFrame com target ja codificado
+        df: DataFrame com target já codificado
         target_col: Nome da coluna target (default: "Churn")
 
     Returns:
@@ -149,7 +147,7 @@ def apply_scaling(
 
     Args:
         X: Array de features de shape (n_samples, n_features)
-        scaler: StandardScaler ja fitado nos dados de treino
+        scaler: StandardScaler já fitado nos dados de treino
 
     Returns:
         Array de features escaladas
@@ -185,16 +183,8 @@ def mlp_preprocess_data(
 ) -> tuple[np.ndarray, np.ndarray, list[str], pd.DataFrame]:
     """Preprocessa DataFrame ja limpo do Telco para treino MLP.
 
-    Esta funcao espera um DataFrame que JA PASSOU por
-    clean_telco_data do modulo cleaning. Nao executa limpeza
-    de dados (remocao de NaN, validacao de dominio) pois
-    essas etapas sao responsabilidade de clean_telco_data,
-    a fonte da verdade do EDA.
-
-    Passos (transformacoes especificas de modelo):
-        1. Codifica Churn: "Yes"->1, "No"->0
-        2. One-hot encoding para variaveis categoricas
-        3. Retorna features nao escaladas (scaling post-split)
+    NAO aplica StandardScaler - deve ser feito APOS o split
+    treino/teste para evitar data leakage.
 
     Args:
         df: DataFrame LIMPO (saida de clean_telco_data())
@@ -227,4 +217,4 @@ def mlp_preprocess_data(
     X = np.asarray(X_df.values, dtype=np.float64)
     y = np.asarray(y_series.values, dtype=np.float64)
 
-    return X, y, feature_names, df_encoded
+    return X, y, feature_names

@@ -9,7 +9,7 @@ ifeq ($(CHECK_ENV),0)
   ENV_ERROR = @echo "[ERROR] ERRO: Arquivo .env não encontrado!" && echo "Tip: Copie .env.example para .env:" && echo "   cp .env.example .env" && echo "" && exit 1
 endif
 
-# Help padrao
+# Help padrão
 help:
 	@echo "Tech Challenge Fase 1 - Comandos Disponiveis"
 	@echo ""
@@ -25,14 +25,13 @@ help:
 	@echo ""
 	@echo "Desenvolvimento:"
 	@echo "  make test       - Rodar testes"
-	@echo "  make lint       - Verificar codigo com ruff"
-	@echo "  make format     - Formatar codigo com ruff"
+	@echo "  make lint       - Verificar código com ruff"
+	@echo "  make format     - Formatar código com ruff"
 	@echo ""
 	@echo "ML:"
 	@echo "  make train      - Treinar todos os modelos (requer .env + MLflow)"
 	@echo "  make train-dummy - Treinar baseline DummyClassifier"
 	@echo "  make train-mlp  - Treinar modelo MLP (requer .env + MLflow)"
-	@echo "  make train-logistic - Treinar modelo Logistic Regression (futuro)"
 	@echo ""
 
 # Setup inicial
@@ -62,23 +61,23 @@ setup:
 		dvc remote add -d onedrive_remote "$$URL"; \
 		echo "[OK] DVC remote configurado para: $$URL"; \
 	else \
-		echo "[WARN] Aviso: URL remota do DVC nao definida."; \
+		echo "[WARN] Aviso: URL remota do DVC não definida."; \
 	fi
-	@echo "Setup concluido!"
+	@echo "Setup concluído!"
 
 # Testes
 test:
 	@echo "Executando testes..."
 	uv run pytest tests/ -v --cov=src --cov-report=term-missing
 
-# Verificar codigo
+# Verificar código
 lint:
-	@echo "Verificando codigo com ruff..."
+	@echo "Verificando código com ruff..."
 	uv run ruff check .
 
-# Formatar codigo
+# Formatar código
 format:
-	@echo "Formatando codigo com ruff..."
+	@echo "Formatando código com ruff..."
 	uv run ruff format .
 
 # Iniciar Docker em background
@@ -90,7 +89,7 @@ docker-up:
 
 # Parar Docker
 docker-down:
-	@echo "[STOP] Pararando containers MLflow..."
+	@echo "[STOP] Parando containers MLflow..."
 	docker compose -f docker/docker-compose.yml --env-file .env down
 	@echo "[OK] Containers parados!"
 
@@ -100,21 +99,30 @@ train:
 	@echo "Treinando todos os modelos..."
 	make train-dummy
 	make train-mlp
-	@echo "Todos os treinamentos concluidos!"
+	@echo "Todos os treinamentos concluídos!"
 
 # Treinar baseline DummyClassifier
 train-dummy:
 	$(ENV_ERROR)
 	@echo "Treinando baseline DummyClassifier..."
 	uv run python -m src.pipelines.run_dummy_baseline
-	@echo "Baseline DummyClassifier concluido!"
+	@echo "Baseline DummyClassifier concluído!"
 
 # Treinar modelo MLP
 train-mlp:
 	$(ENV_ERROR)
 	@echo "Treinando modelo MLP..."
 	uv run python -m src.pipelines.run_mlp
-	@echo "Treinamento MLP concluido!"
+	@echo "Treinamento MLP concluído!"
+
+# Futuro: Treinar modelo Logistic Regression
+train-logistic:
+	$(ENV_ERROR)
+	@echo "Treinando modelo Logistic Regression..."
+	@echo "[WARN] Modelo ainda em desenvolvimento"
+	@echo "Próximo passo: criar src/pipelines/train_logistic.py"
+	@echo "Treinamento Logistic Regression concluído!"
+	@echo "✅ Containers parados!"
 
 # Analisar experimentos do MLflow
 analyze:
@@ -123,30 +131,21 @@ analyze:
 	uv run python -m src.tools.analyze_experiments --output reports/mlflow_analysis.csv
 	@echo "Analise concluida! CSV salvo em reports/mlflow_analysis.csv"
 
-# Futuro: Treinar modelo Logistic Regression
-train-logistic:
-	$(ENV_ERROR)
-	@echo "Treinando modelo Logistic Regression..."
-	@echo "[WARN] Modelo ainda em desenvolvimento"
-	@echo "Proximo passo: criar src/pipelines/train_logistic.py"
-	@echo "Treinamento Logistic Regression concluido!"
-	@echo "✅ Containers parados!"
-
 # Iniciar API no Docker
 api-up:
-	@echo "🚀 Iniciando API em background com hot-reload..."
+	@echo "Starting API in background with hot-reload..."
 	docker compose -f docker/docker-compose.api.yml up --build -d
-	@echo "✅ API iniciada! Acesse o Swagger em http://localhost:$${API_PORT:-8000}/docs"
+	@echo "[OK] API started! Access Swagger at http://localhost:$${API_PORT:-8000}/docs"
 
 # Parar API
 api-down:
-	@echo "🛑 Parando container da API..."
+	@echo "[STOP] Stopping API container..."
 	docker compose -f docker/docker-compose.api.yml down
-	@echo "✅ API parada!"
+	@echo "[OK] API stopped!"
 
 # Testar API
 api-test:
-	@echo "🧪 Testando endpoint de predição (/predict)..."
+	@echo "Testing prediction endpoint (/predict)..."
 	curl -X POST "http://localhost:$${API_PORT:-8000}/predict" \
 	     -H "Content-Type: application/json" \
 	     -d '{"customerID": "1234-ABCD", "tenure": 5, "MonthlyCharges": 50.0, "Contract": "Month-to-month"}'

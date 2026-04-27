@@ -13,6 +13,7 @@ dependencies = [
     "scikit-learn>=1.8.0",
     "protobuf<5.0.0",
     "marimo>=0.23.3",
+    "python-json-logger>=3.2.1",
 ]
 authors = [
   {name = "Fernando Failla Foschiani", email = "fefailla68@gmail.com"}
@@ -40,7 +41,7 @@ dev = [
 ]
 
 [tool.ruff] # Configurando tools do pyprojetct. Tools sao usadas para configurar linters, formatadores e outras ferramentas de desenvolvimento.
-# Numero maximo de linhas 79, seguindo padrao da documentacao ruff.
+# Numero maximo de linhas 79, seguindo padrão da documentacao ruff.
 line-length = 79
 
 [tool.ruff.lint]
@@ -49,9 +50,9 @@ extend-select = ['I', 'F', 'E', 'W', 'PL', 'PT'] # Recomendacoes do dunossauro n
 
 [tool.mypy]
 python_version = 3.13
-disallow_untyped_defs = true # Toda nova funcao deve ter tipo definido, seguindo boas praticas de tipagem.
+disallow_untyped_defs = true # Toda nova função deve ter tipo definido, seguindo boas praticas de tipagem.
 exclude =[
-  "notebooks/" # Excluindo notebooks do mypy, pois eles geralmente sao usados para experimentacao e podem conter codigo mais flexivel.
+  "notebooks/" # Excluindo notebooks do mypy, pois eles geralmente sao usados para experimentação e podem conter código mais flexivel.
 ]
 
 [tool.pytest.ini_options]
@@ -86,10 +87,6 @@ module = [
     "pandas.*",
     "joblib",
     "joblib.*",
-    "dotenv",
-    "rich.*",
-    "sklearn.*",
-    "numpy.*",
-    "pandas.*"
+    "pythonjsonlogger.*",
 ]
 ignore_missing_imports = true
