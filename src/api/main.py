@@ -9,6 +9,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
+from src.api.inference import predict_single
 from src.api.middleware import LatencyMiddleware, RequestIDMiddleware
 from src.api.schemas import PredictRequest, PredictResponse
 from src.config.logging import LoggingConfig, request_id_ctx, setup_logging
@@ -55,21 +56,18 @@ async def health_check() -> dict[str, str]:
 async def predict(
     request: PredictRequest,
 ) -> PredictResponse:
-    """Recebe os dados do cliente e retorna a predição de churn."""
+    """Recebe os dados do cliente e retorna a predicao de churn."""
     start = time.perf_counter()
 
-    # TODO: Integrar com o modelo real no futuro
-    # Por enquanto, retornamos um mock dinâmico baseado na entrada
-    tenure_threshold = 12
-    churn_threshold = 0.5
-
-    probability = 0.85 if request.tenure < tenure_threshold else 0.15
-    prediction = probability > churn_threshold
+    customer_data = request.model_dump(by_alias=True, exclude_none=True)
+    _churn_threshold = 0.5
+    probability = predict_single(customer_data)
+    prediction = probability > _churn_threshold
 
     elapsed_ms = (time.perf_counter() - start) * 1000
 
     logger.info(
-        "Predição concluída: %s",
+        "Predicao concluida: %s",
         {
             "customer_id": request.customer_id,
             "tenure": request.tenure,

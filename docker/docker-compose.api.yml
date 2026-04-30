@@ -7,8 +7,10 @@ services:
     ports:
       - "${API_PORT:-8000}:8000"
     volumes:
-      # Mapeia apenas a pasta api para hot-reload
-      - ../src/api:/app/src/api
+      # Hot-reload do codigo fonte
+      - ../src:/app/src
+      # Mapeia a pasta de modelos para inferencia
+      - ../models:/app/models
     environment:
       - PYTHONPATH=/app
     # Comando de desenvolvimento com hot-reload habilitado no FastAPI

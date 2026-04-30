@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 import uuid
+from unittest.mock import patch
 
 from fastapi import status
 from fastapi.testclient import TestClient
@@ -18,26 +19,47 @@ setup_logging(LoggingConfig(json_format=False))
 client = TestClient(app)
 
 
+def _base_payload() -> dict[str, object]:
+    return {
+        "customerID": "7590-VHVEG",
+        "gender": "Female",
+        "SeniorCitizen": 0,
+        "Partner": "Yes",
+        "Dependents": "No",
+        "tenure": 1,
+        "PhoneService": "No",
+        "MultipleLines": "No phone service",
+        "InternetService": "DSL",
+        "OnlineSecurity": "No",
+        "OnlineBackup": "Yes",
+        "DeviceProtection": "No",
+        "TechSupport": "No",
+        "StreamingTV": "No",
+        "StreamingMovies": "No",
+        "Contract": "Month-to-month",
+        "PaperlessBilling": "Yes",
+        "PaymentMethod": "Electronic check",
+        "MonthlyCharges": 29.85,
+    }
+
+
 def test_health_endpoint_still_works() -> None:
-    """O endpoint de health deve funcionar após adicionar o middleware."""
+    """O endpoint de health deve funcionar apos adicionar o middleware."""
     response = client.get("/health")
     assert response.status_code == status.HTTP_200_OK
     assert response.json() == {"status": "healthy"}
 
 
-def test_predict_endpoint_still_works() -> None:
-    """O endpoint de predict deve funcionar após adicionar o middleware."""
-    payload = {
-        "customerID": "7590-VHVEG",
-        "tenure": 1,
-        "MonthlyCharges": 29.85,
-        "Contract": "Month-to-month",
-    }
+@patch("src.api.main.predict_single", return_value=_HIGH_CHURN_PROB)
+def test_predict_endpoint_still_works(mock_predict: object) -> None:
+    """O endpoint de predict deve funcionar apos adicionar o middleware."""
+    payload = _base_payload()
     response = client.post("/predict", json=payload)
     assert response.status_code == status.HTTP_200_OK
     data = response.json()
     assert data["churn_probability"] == _HIGH_CHURN_PROB
     assert data["churn_prediction"] is True
+    mock_predict.assert_called_once()
 
 
 def test_request_id_returned_in_response_header() -> None:
