@@ -6,14 +6,14 @@ ENV UV_COMPILE_BYTECODE=1 \
 
 WORKDIR /app
 
-# Copia os arquivos do projeto para gerenciar dependências
+# Copia os arquivos do projeto para gerenciar dependencias
 COPY pyproject.toml uv.lock ./
 
-# Instala apenas as dependências (otimiza o cache do Docker)
+# Instala apenas as dependencias (otimiza o cache do Docker)
 RUN uv sync --frozen --no-install-project --no-dev
 
-# Copia a pasta api
-COPY src/api ./src/api
+# Copia todo o codigo fonte (incluindo api, data, training, etc.)
+COPY src ./src
 
-# Comando padrão para a API
+# Comando padrao para a API
 CMD ["uv", "run", "fastapi", "run", "src/api/main.py", "--host", "0.0.0.0", "--port", "8000"]

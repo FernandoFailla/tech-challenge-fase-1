@@ -154,8 +154,8 @@ api-test:
 	@echo "Testing prediction endpoint (/predict)..."
 	curl -X POST "http://localhost:$${API_PORT:-8000}/predict" \
 	     -H "Content-Type: application/json" \
-	     -d '{"customerID": "1234-ABCD", "tenure": 5, "MonthlyCharges": 50.0, "Contract": "Month-to-month"}'
-	@echo "\nTeste concluído!"
+	     -d '{"customerID":"7590-VHVEG","gender":"Female","SeniorCitizen":0,"Partner":"Yes","Dependents":"No","tenure":1,"PhoneService":"No","MultipleLines":"No phone service","InternetService":"DSL","OnlineSecurity":"No","OnlineBackup":"Yes","DeviceProtection":"No","TechSupport":"No","StreamingTV":"No","StreamingMovies":"No","Contract":"Month-to-month","PaperlessBilling":"Yes","PaymentMethod":"Electronic check","MonthlyCharges":29.85}'
+	@echo "\nTeste concluido!"
 
 # Tuning de hiperparametros do MLP com Optuna
 tune-mlp:
