@@ -17,10 +17,10 @@ help:
 	@echo "  make setup      - Configurar ambiente (uv sync + pre-commit)"
 	@echo ""
 	@echo "Docker:"
-	@echo "  make docker-up  - Iniciar MLflow em background (requer .env)"
+	@echo "  make docker-up   - Iniciar MLflow em background (requer .env)"
 	@echo "  make docker-down - Parar todos os containers MLflow"
-	@echo "  make api-up     - Iniciar API FastAPI em background com hot-reload"
-	@echo "  make api-down   - Parar container da API"
+	@echo "  make api-up     - Iniciar API FastAPI + Prometheus + Grafana em background"
+	@echo "  make api-down   - Parar containers da API, Prometheus e Grafana"
 	@echo "  make api-test   - Testar endpoint de predição via cURL"
 	@echo ""
 	@echo "Desenvolvimento:"
@@ -29,9 +29,10 @@ help:
 	@echo "  make format     - Formatar código com ruff"
 	@echo ""
 	@echo "ML:"
-	@echo "  make train      - Treinar todos os modelos (requer .env + MLflow)"
-	@echo "  make train-dummy - Treinar baseline DummyClassifier"
-	@echo "  make train-mlp  - Treinar modelo MLP (requer .env + MLflow)"
+	@echo "  make train          - Treinar todos os modelos (requer .env + MLflow)"
+	@echo "  make train-dummy    - Treinar baseline DummyClassifier"
+	@echo "  make train-mlp      - Treinar modelo MLP"
+	@echo "  make train-logistic - Treinar modelo Logistic Regression"
 	@echo ""
 
 # Setup inicial
@@ -99,7 +100,8 @@ train:
 	@echo "Treinando todos os modelos..."
 	make train-dummy
 	make train-mlp
-	@echo "Todos os treinamentos concluídos!"
+	make train-logistic
+	@echo "Todos os treinamentos concluidos!"
 
 # Treinar baseline DummyClassifier
 train-dummy:
@@ -119,10 +121,8 @@ train-mlp:
 train-logistic:
 	$(ENV_ERROR)
 	@echo "Treinando modelo Logistic Regression..."
-	@echo "[WARN] Modelo ainda em desenvolvimento"
-	@echo "Próximo passo: criar src/pipelines/train_logistic.py"
-	@echo "Treinamento Logistic Regression concluído!"
-	@echo "Containers parados!"
+	uv run python -m src.pipelines.run_logistic_regression
+	@echo "Treinamento Logistic Regression concluido!"
 
 # Analisar experimentos do MLflow
 analyze:
@@ -131,17 +131,20 @@ analyze:
 	uv run python -m src.tools.analyze_experiments --output reports/mlflow_analysis.csv
 	@echo "Analise concluida! CSV salvo em reports/mlflow_analysis.csv"
 
-# Iniciar API no Docker
+# Iniciar API + Prometheus + Grafana no Docker
 api-up:
-	@echo "Starting API in background with hot-reload..."
+	@echo "Starting API + Prometheus + Grafana in background..."
 	docker compose -f docker/docker-compose.api.yml up --build -d
-	@echo "[OK] API started! Access Swagger at http://localhost:$${API_PORT:-8000}/docs"
+	@echo "[OK] API:       http://localhost:$${API_PORT:-8000}/docs"
+	@echo "[OK] Prometheus: http://localhost:9090"
+	@echo "[OK] Targets:    http://localhost:9090/targets"
+	@echo "[OK] Grafana:    http://localhost:3000  (admin/admin)"
 
-# Parar API
+# Parar API + Prometheus + Grafana
 api-down:
-	@echo "[STOP] Stopping API container..."
+	@echo "[STOP] Stopping API + Prometheus + Grafana..."
 	docker compose -f docker/docker-compose.api.yml down
-	@echo "[OK] API stopped!"
+	@echo "[OK] Stopped!"
 
 # Testar API
 api-test:

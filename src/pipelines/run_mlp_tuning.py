@@ -15,7 +15,7 @@ import argparse
 import logging
 import os
 from pathlib import Path
-from typing import Any
+from typing import cast
 
 import mlflow
 import numpy as np
@@ -85,10 +85,18 @@ def objective(  # noqa: PLR0913, PLR0914, PLR0917
         PR-AUC no conjunto de teste (a maximizar).
     """
     # === Espaço de busca de hiperparametros ===
-    _choices: list[Any] = [(64, 32), (128, 64, 32), (256, 128, 64)]
-    hidden_dims: tuple[int, ...] = trial.suggest_categorical(
-        "hidden_dims", _choices
-    )  # type: ignore[assignment]
+    _hidden_dims_choices: list[tuple[int, ...]] = [
+        (64, 32),
+        (128, 64, 32),
+        (256, 128, 64),
+    ]
+    hidden_dims = cast(
+        tuple[int, ...],
+        trial.suggest_categorical(
+            "hidden_dims",
+            _hidden_dims_choices,  # type: ignore[arg-type]
+        ),
+    )
     dropout_rate = trial.suggest_float("dropout_rate", 0.1, 0.5, step=0.1)
     lr = trial.suggest_float("lr", 1e-4, 1e-2, log=True)
     weight_decay = trial.suggest_float("weight_decay", 1e-6, 1e-3, log=True)
