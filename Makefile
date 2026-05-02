@@ -1,7 +1,7 @@
 # Makefile para o TechChallenge Fase 1
 # Comandos essenciais para desenvolvimento
 
-.PHONY: setup test lint format help docker-up docker-down api-up api-down api-test train train-dummy train-mlp train-logistic analyze tune-mlp
+.PHONY: setup test lint format help docker-up docker-down api-up api-down api-test train train-dummy train-mlp train-logistic analyze tune-mlp recover-model
 
 # Verifica se o arquivo .env existe
 CHECK_ENV := $(shell test -f .env && echo 1 || echo 0)
@@ -33,6 +33,8 @@ help:
 	@echo "  make train-dummy    - Treinar baseline DummyClassifier"
 	@echo "  make train-mlp      - Treinar modelo MLP"
 	@echo "  make train-logistic - Treinar modelo Logistic Regression"
+	@echo "  make analyze        - Analisar experimentos e gerar relatorio"
+	@echo "  make recover-model   - Recuperar modelo do MLflow (requer .env)"
 	@echo ""
 
 # Setup inicial
@@ -129,7 +131,8 @@ analyze:
 	$(ENV_ERROR)
 	@echo "Analisando experimentos no MLflow..."
 	uv run python -m src.tools.analyze_experiments --output reports/mlflow_analysis.csv
-	@echo "Analise concluida! CSV salvo em reports/mlflow_analysis.csv"
+	uv run python -m src.tools.analyze_report --input reports/mlflow_analysis.csv --output reports/experiment_comparison.md
+	@echo "Analise concluida! CSV salvo em reports/mlflow_analysis.csv, relatorio em reports/experiment_comparison.md"
 
 # Iniciar API + Prometheus + Grafana no Docker
 api-up:
@@ -160,3 +163,11 @@ tune-mlp:
 	@echo "Tuning de hiperparametros MLP com Optuna..."
 	uv run python -m src.pipelines.run_mlp_tuning --n-trials 20
 	@echo "Tuning concluido! Relatorio em reports/optuna_study.csv"
+
+# Recuperar modelo do MLflow
+recover-model:
+	$(ENV_ERROR)
+	@echo "Recuperando modelo do MLflow..."
+	@echo -n "Tipo de modelo (mlp/logistic/dummy): " && read model_type; \
+	uv run python -m src.inference.recover_model --model-type $$model_type --output models/recovered
+	@echo "Modelo recuperado com sucesso!"
