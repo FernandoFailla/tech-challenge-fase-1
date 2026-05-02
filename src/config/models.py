@@ -16,12 +16,15 @@ class MLPConfig:
         hidden_dims: Tupla com tamanho de cada camada oculta.
         dropout_rate: Probabilidade de dropout durante treino.
         use_batch_norm: Se usa BatchNorm apos cada Linear.
+        pos_weight: Peso para classe positiva no BCEWithLogitsLoss.
+            Util para compensar desbalanceamento. None = sem peso.
     """
 
     input_dim: int
     hidden_dims: tuple[int, ...] = (64, 32)
     dropout_rate: float = 0.3
     use_batch_norm: bool = True
+    pos_weight: float | None = None
 
 
 @dataclass(frozen=True)
