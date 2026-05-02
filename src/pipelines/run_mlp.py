@@ -31,7 +31,7 @@ import numpy as np
 import pandas as pd
 import torch
 
-from src.config.logging import setup_logging
+from src.api.logging import setup_logging
 from src.config.models import MLPConfig, TrainingConfig
 
 # Limiar para converter probabilidades em predicoes binarias

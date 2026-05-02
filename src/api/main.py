@@ -7,11 +7,16 @@ import time
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Response
 
-from src.api.middleware import LatencyMiddleware, RequestIDMiddleware
+from src.api.logging import LoggingConfig, request_id_ctx, setup_logging
+from src.api.metrics import PREDICTION_PROBABILITY, metrics_exposition
+from src.api.middleware import (
+    DriftMiddleware,
+    LatencyMiddleware,
+    RequestIDMiddleware,
+)
 from src.api.schemas import PredictRequest, PredictResponse
-from src.config.logging import LoggingConfig, request_id_ctx, setup_logging
 
 logger = logging.getLogger(__name__)
 
@@ -32,19 +37,34 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# Registro de middleware: RequestIDMiddleware adicionado POR ÚLTIMO
-# para que execute PRIMEIRO na requisição (entrada) e POR ÚLTIMO na
-# resposta (saída) na ordem LIFO do FastAPI. Isso garante que o
-# request_id esteja definido quando LatencyMiddleware registrar o
-# log ao completar a resposta.
+# Registro de middleware (ordem LIFO do FastAPI):
+# DriftMiddleware adicionado POR ÚLTIMO para executar PRIMEIRO na entrada,
+# garantindo que o body seja lido e reconstruído antes dos demais.
+# RequestIDMiddleware é o último na saída (primeiro na entrada) para
+# garantir que o request_id esteja definido quando LatencyMiddleware
+# registrar o log ao completar a resposta.
 app.add_middleware(LatencyMiddleware)
 app.add_middleware(RequestIDMiddleware)
+app.add_middleware(DriftMiddleware)
 
 
 @app.get("/health", tags=["Saúde"])
 async def health_check() -> dict[str, str]:
     """Verifica se a API está no ar."""
     return {"status": "healthy"}
+
+
+@app.get("/metrics", tags=["Monitoramento"])
+async def metrics() -> Response:
+    """Expoem métricas no formato Prometheus.
+
+    Endpoint compatível com scrapers como Prometheus Server
+    ou Grafana Agent para coleta de telemetria.
+    """
+    return Response(
+        content=metrics_exposition(),
+        media_type="text/plain; version=0.0.4; charset=utf-8",
+    )
 
 
 @app.post(
@@ -67,6 +87,8 @@ async def predict(
     prediction = probability > churn_threshold
 
     elapsed_ms = (time.perf_counter() - start) * 1000
+
+    PREDICTION_PROBABILITY.observe(probability)
 
     logger.info(
         "Predição concluída: %s",
