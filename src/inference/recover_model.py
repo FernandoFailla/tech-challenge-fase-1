@@ -177,7 +177,7 @@ def recover_dummy_model(
 
         runs: pd.DataFrame = mlflow.search_runs(  # type: ignore[assignment]
             experiment_ids=[experiment.experiment_id],
-            filter_string=f"tags.mlflow.runName = 'dummy_{strategy}'",
+            filter_string=f"tags.`mlflow.runName` = 'dummy_{strategy}'",
             order_by=["start_time DESC"],
             max_results=1,
         )

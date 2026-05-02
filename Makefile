@@ -165,6 +165,6 @@ tune-mlp:
 recover-model:
 	$(ENV_ERROR)
 	@echo "Recuperando modelo do MLflow..."
-	@read -p "Tipo de modelo (mlp/logistic/dummy): " model_type; \
+	@echo -n "Tipo de modelo (mlp/logistic/dummy): " && read model_type; \
 	uv run python -m src.inference.recover_model --model-type $$model_type --output models/recovered
 	@echo "Modelo recuperado com sucesso!"

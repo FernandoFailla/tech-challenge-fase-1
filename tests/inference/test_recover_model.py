@@ -188,7 +188,7 @@ class TestRecoverDummyModel:
             patch(
                 "src.inference.recover_model.mlflow.search_runs",
                 return_value=runs_df,
-            ),
+            ) as mock_search,
             patch(
                 "mlflow.sklearn.load_model",
                 return_value=mock_model,
@@ -204,3 +204,10 @@ class TestRecoverDummyModel:
             )
 
         assert "dummy_most_frequent_model" in str(result)
+        mock_search.assert_called_once()
+        kwargs = mock_search.call_args.kwargs
+        assert "filter_string" in kwargs
+        assert (
+            kwargs["filter_string"]
+            == "tags.`mlflow.runName` = 'dummy_most_frequent'"
+        )
