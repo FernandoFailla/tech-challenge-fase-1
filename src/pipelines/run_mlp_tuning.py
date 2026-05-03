@@ -84,14 +84,11 @@ def objective(  # noqa: PLR0913, PLR0914, PLR0917
     Returns:
         PR-AUC no conjunto de teste (a maximizar).
     """
-    # === Espaco de busca de hiperparametros ===
+    # === Espaço de busca de hiperparametros ===
     _hidden_dims_choices: list[tuple[int, ...]] = [
         (64, 32),
         (128, 64, 32),
         (256, 128, 64),
-        (256, 128, 64, 32),
-        (512, 256, 128),
-        (128, 128, 64),
     ]
     hidden_dims = cast(
         tuple[int, ...],
@@ -100,42 +97,32 @@ def objective(  # noqa: PLR0913, PLR0914, PLR0917
             _hidden_dims_choices,  # type: ignore[arg-type]
         ),
     )
-    dropout_rate = trial.suggest_float("dropout_rate", 0.0, 0.6, step=0.05)
-    lr = trial.suggest_float("lr", 5e-5, 5e-2, log=True)
-    weight_decay = trial.suggest_float("weight_decay", 1e-6, 1e-2, log=True)
-    batch_size = trial.suggest_categorical("batch_size", [16, 32, 64, 128])
+    dropout_rate = trial.suggest_float("dropout_rate", 0.1, 0.5, step=0.1)
+    lr = trial.suggest_float("lr", 1e-4, 1e-2, log=True)
+    weight_decay = trial.suggest_float("weight_decay", 1e-6, 1e-3, log=True)
+    batch_size = trial.suggest_categorical("batch_size", [32, 64, 128])
     early_stopping_patience = trial.suggest_int(
-        "early_stopping_patience", 3, 20, step=1
+        "early_stopping_patience", 5, 15, step=5
     )
     use_batch_norm = trial.suggest_categorical("use_batch_norm", [True, False])
-    optimizer_name = trial.suggest_categorical("optimizer", ["adam", "sgd"])
-    max_epochs = trial.suggest_categorical("max_epochs", [100, 150, 200])
-    scheduler_patience = trial.suggest_int("scheduler_patience", 2, 7, step=1)
-    pos_weight_raw = trial.suggest_categorical(
-        "pos_weight", ["none", "2.0", "2.5", "3.0", "3.5"]
-    )
-    pos_weight: float | None = (
-        None if pos_weight_raw == "none" else float(pos_weight_raw)
-    )
 
     mlp_config = MLPConfig(
         input_dim=X_train_scaled.shape[1],
         hidden_dims=hidden_dims,
         dropout_rate=dropout_rate,
         use_batch_norm=use_batch_norm,
-        pos_weight=pos_weight,
     )
 
     training_config = TrainingConfig(
-        optimizer=optimizer_name,
+        optimizer="adam",
         lr=lr,
         weight_decay=weight_decay,
         scheduler="reduce_on_plateau",
-        scheduler_patience=scheduler_patience,
+        scheduler_patience=3,
         early_stopping_patience=early_stopping_patience,
         early_stopping_min_delta=0.001,
         batch_size=batch_size,
-        max_epochs=max_epochs,
+        max_epochs=100,
         val_split=0.2,
         random_seed=RANDOM_SEED,
     )

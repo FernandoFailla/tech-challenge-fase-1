@@ -67,7 +67,6 @@ class MLPForTraining(nn.Module):
     """Wrapper de treino com BCEWithLogitsLoss.
 
     Usa BCEWithLogitsLoss para estabilidade numerica.
-    Suporta pos_weight para compensar desbalanceamento de classes.
 
     Attributes:
         config: MLPConfig.
@@ -84,12 +83,7 @@ class MLPForTraining(nn.Module):
         super().__init__()
         self.config = config
         self.model = MLP(config)
-        if config.pos_weight is not None and config.pos_weight > 0:
-            self.criterion = nn.BCEWithLogitsLoss(
-                pos_weight=torch.tensor(config.pos_weight)
-            )
-        else:
-            self.criterion = nn.BCEWithLogitsLoss()
+        self.criterion = nn.BCEWithLogitsLoss()
 
     def forward(
         self,
