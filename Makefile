@@ -1,7 +1,7 @@
 # Makefile para o TechChallenge Fase 1
 # Comandos essenciais para desenvolvimento
 
-.PHONY: setup test lint format help docker-up docker-down api-up api-down api-test train train-dummy train-mlp train-logistic analyze tune-mlp recover-model
+.PHONY: setup test lint format help docker-up docker-down api-up api-down api-test train train-dummy train-mlp train-logistic compare-models analyze tune-mlp recover-model
 
 # Verifica se o arquivo .env existe
 CHECK_ENV := $(shell test -f .env && echo 1 || echo 0)
@@ -33,6 +33,7 @@ help:
 	@echo "  make train-dummy    - Treinar baseline DummyClassifier"
 	@echo "  make train-mlp      - Treinar modelo MLP"
 	@echo "  make train-logistic - Treinar modelo Logistic Regression"
+	@echo "  make compare-models  - Comparar MLP vs baselines e gerar relatorio"
 	@echo "  make analyze        - Analisar experimentos e gerar relatorio"
 	@echo "  make recover-model   - Recuperar modelo do MLflow (requer .env)"
 	@echo ""
@@ -103,7 +104,8 @@ train:
 	make train-dummy
 	make train-mlp
 	make train-logistic
-	@echo "Todos os treinamentos concluidos!"
+	make compare-models
+	@echo "Todos os treinamentos e comparacao concluidos!"
 
 # Treinar baseline DummyClassifier
 train-dummy:
@@ -119,12 +121,18 @@ train-mlp:
 	uv run python -m src.pipelines.run_mlp
 	@echo "Treinamento MLP concluído!"
 
-# Futuro: Treinar modelo Logistic Regression
+# Treinar modelo Logistic Regression
 train-logistic:
 	$(ENV_ERROR)
 	@echo "Treinando modelo Logistic Regression..."
 	uv run python -m src.pipelines.run_logistic_regression
 	@echo "Treinamento Logistic Regression concluido!"
+
+# Comparar MLP vs modelos baseline
+compare-models:
+	@echo "Comparando MLP vs modelos baseline..."
+	uv run python -m src.pipelines.run_compare_models
+	@echo "Comparacao concluida! Relatorio em MLP_VERSUS_BASELINE.md"
 
 # Analisar experimentos do MLflow
 analyze:
