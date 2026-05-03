@@ -30,11 +30,11 @@ from src.training.mlp import MLP, MLPForTraining, MLPTrainer
 
 __all__ = [
     "MLP",
+    "DummyTrainingConfig",
+    "LogisticTrainingConfig",
     "MLPForTraining",
     "MLPTrainer",
     "ModelResult",
-    "DummyTrainingConfig",
-    "LogisticTrainingConfig",
     "build_comparison_table",
     "build_threshold_comparison",
     "compute_binary_classification_metrics",

@@ -18,6 +18,7 @@ import sys
 from pathlib import Path
 
 import numpy as np
+import pandas as pd
 
 from src.api.logging import setup_logging
 from src.constants import DEFAULT_DATASET_PATH
@@ -61,12 +62,11 @@ def _log_model_metrics(
 
 def _save_outputs(
     all_results: dict[str, ModelResult],
-    comparison_df: object,
-    threshold_df: object,
+    comparison_df: pd.DataFrame,
+    threshold_df: pd.DataFrame,
     reports_dir: Path,
 ) -> None:
     """Salva CSVs e threshold tradeoffs por modelo."""
-
     comparison_csv = reports_dir / "model_comparison.csv"
     comparison_df.to_csv(comparison_csv, index=False)
     logger.info("Comparacao salva em: %s", comparison_csv)
@@ -172,18 +172,12 @@ def main() -> int:
     reports_dir.mkdir(parents=True, exist_ok=True)
 
     logger.info("Gerando visualizacoes comparativas...")
-    plot_roc_comparison(
-        all_results, reports_dir / "comparison_roc_curve.png"
-    )
-    plot_pr_comparison(
-        all_results, reports_dir / "comparison_pr_curve.png"
-    )
+    plot_roc_comparison(all_results, reports_dir / "comparison_roc_curve.png")
+    plot_pr_comparison(all_results, reports_dir / "comparison_pr_curve.png")
     plot_confusion_matrices(
         all_results, reports_dir / "comparison_confusion_matrices.png"
     )
-    plot_cost_comparison(
-        comparison_df, reports_dir / "comparison_cost.png"
-    )
+    plot_cost_comparison(comparison_df, reports_dir / "comparison_cost.png")
     plot_threshold_tradeoff(
         all_results, reports_dir / "comparison_threshold_tradeoff.png"
     )

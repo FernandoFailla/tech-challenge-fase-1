@@ -95,13 +95,11 @@ def prepare_data(  # noqa: PLR0914
     df_for_split = pd.DataFrame(X)
     df_for_split["Churn"] = y
 
-    X_train_df, X_test_df, y_train_s, y_test_s = (
-        split_train_test_stratified(
-            df_for_split,
-            "Churn",
-            test_size=test_size,
-            random_seed=random_seed,
-        )
+    X_train_df, X_test_df, y_train_s, y_test_s = split_train_test_stratified(
+        df_for_split,
+        "Churn",
+        test_size=test_size,
+        random_seed=random_seed,
     )
 
     X_train = X_train_df.values
@@ -153,9 +151,7 @@ def train_and_evaluate_dummy(  # noqa: PLR0914
     X_test = data["X_test_scaled"]
 
     for strategy in ("most_frequent", "stratified", "uniform"):
-        model = DummyClassifier(
-            strategy=strategy, random_state=RANDOM_SEED
-        )
+        model = DummyClassifier(strategy=strategy, random_state=RANDOM_SEED)
         model.fit(X_train, y_train)
 
         y_pred = model.predict(X_test)
@@ -442,27 +438,13 @@ def build_threshold_comparison(
             rows.append(
                 {
                     "model": name,
-                    "optimal_threshold": df.loc[
-                        optimal_idx, "threshold"
-                    ],
-                    "optimal_total_cost": df.loc[
-                        optimal_idx, "total_cost"
-                    ],
-                    "optimal_precision": df.loc[
-                        optimal_idx, "precision"
-                    ],
-                    "optimal_recall": df.loc[
-                        optimal_idx, "recall"
-                    ],
-                    "optimal_f1_score": df.loc[
-                        optimal_idx, "f1_score"
-                    ],
-                    "false_negatives": df.loc[
-                        optimal_idx, "false_negatives"
-                    ],
-                    "false_positives": df.loc[
-                        optimal_idx, "false_positives"
-                    ],
+                    "optimal_threshold": df.loc[optimal_idx, "threshold"],
+                    "optimal_total_cost": df.loc[optimal_idx, "total_cost"],
+                    "optimal_precision": df.loc[optimal_idx, "precision"],
+                    "optimal_recall": df.loc[optimal_idx, "recall"],
+                    "optimal_f1_score": df.loc[optimal_idx, "f1_score"],
+                    "false_negatives": df.loc[optimal_idx, "false_negatives"],
+                    "false_positives": df.loc[optimal_idx, "false_positives"],
                 }
             )
 
@@ -483,9 +465,7 @@ def plot_roc_comparison(
     for name, result in all_results.items():
         fpr, tpr, _ = roc_curve(result.y_true, result.y_proba)
         roc_auc_val = auc(fpr, tpr)
-        ax.plot(
-            fpr, tpr, label=f"{name} (AUC = {roc_auc_val:.4f})"
-        )
+        ax.plot(fpr, tpr, label=f"{name} (AUC = {roc_auc_val:.4f})")
 
     ax.plot([0, 1], [0, 1], "k--", label="Aleatorio")
     ax.set_xlabel("False Positive Rate")
@@ -569,9 +549,7 @@ def plot_cost_comparison(
         comparison_df: DataFrame da build_comparison_table.
         output_path: Caminho para salvar a imagem PNG.
     """
-    cost_row = comparison_df[
-        comparison_df["metric"] == "total_cost"
-    ]
+    cost_row = comparison_df[comparison_df["metric"] == "total_cost"]
     if cost_row.empty:
         return
 
@@ -579,9 +557,7 @@ def plot_cost_comparison(
     costs = [float(cost_row[c].values[0]) for c in models]
 
     fig, ax = plt.subplots(figsize=(8, 6))
-    bars = ax.bar(
-        models, costs, color=["#cccccc", "#4c72b0", "#dd8452"]
-    )
+    bars = ax.bar(models, costs, color=["#cccccc", "#4c72b0", "#dd8452"])
     ax.set_ylabel("Custo Total (R$)")
     ax.set_title("Custo Total Estimado por Modelo")
     ax.grid(True, linestyle="--", alpha=0.3, axis="y")
@@ -664,9 +640,7 @@ def plot_threshold_tradeoff(
     axes[2].legend()
     axes[2].grid(True, linestyle="--", alpha=0.5)
 
-    fig.suptitle(
-        "Trade-off: Precision, Recall e Custo", fontsize=14
-    )
+    fig.suptitle("Trade-off: Precision, Recall e Custo", fontsize=14)
     fig.tight_layout()
 
     Path(output_path).parent.mkdir(parents=True, exist_ok=True)
@@ -705,16 +679,11 @@ def plot_metrics_radar(
     compare_results = {
         k: v
         for k, v in all_results.items()
-        if "Dummy" not in k
-        or k == "DummyClassifier_stratified"
+        if "Dummy" not in k or k == "DummyClassifier_stratified"
     }
 
-    fig, ax = plt.subplots(
-        figsize=(8, 8), subplot_kw={"polar": True}
-    )
-    angles = np.linspace(
-        0, 2 * np.pi, len(metrics_keys), endpoint=False
-    )
+    fig, ax = plt.subplots(figsize=(8, 8), subplot_kw={"polar": True})
+    angles = np.linspace(0, 2 * np.pi, len(metrics_keys), endpoint=False)
     angles = np.concatenate((angles, [angles[0]]))
 
     colors = [
@@ -724,16 +693,14 @@ def plot_metrics_radar(
         "#55a868",
     ]
 
-    for idx, (name, result) in enumerate(
-        compare_results.items()
-    ):
+    for idx, (name, result) in enumerate(compare_results.items()):
         if idx >= len(colors):
             break
         values = [result.metrics.get(m, 0.0) for m in metrics_keys]
-        values = np.concatenate((values, [values[0]]))
+        values_arr = np.concatenate((values, [values[0]]))
         ax.plot(
             angles,
-            values,
+            values_arr,
             "o-",
             linewidth=2,
             label=name,
@@ -741,19 +708,17 @@ def plot_metrics_radar(
         )
         ax.fill(
             angles,
-            values,
+            values_arr,
             alpha=0.1,
             color=colors[idx],
         )
 
-    ax.set_thetagrids(
+    ax.set_thetagrids(  # type: ignore[attr-defined]
         angles[:-1] * 180 / np.pi,
         [labels_map[m] for m in metrics_keys],
     )
     ax.set_ylim(0, 1)
-    ax.set_title(
-        "Comparacao de Metricas por Modelo", y=1.08
-    )
+    ax.set_title("Comparacao de Metricas por Modelo", y=1.08)
     ax.legend(loc="upper right", bbox_to_anchor=(1.3, 1.1))
 
     Path(output_path).parent.mkdir(parents=True, exist_ok=True)
@@ -767,11 +732,7 @@ def _render_metrics_table(
 ) -> list[str]:
     """Gera linhas de tabela markdown com metricas."""
     lines: list[str] = []
-    lines.append(
-        "| Metrica | "
-        + " | ".join(comparison_df.columns[1:])
-        + " |"
-    )
+    lines.append("| Metrica | " + " | ".join(comparison_df.columns[1:]) + " |")
     lines.append(
         "|---------|"
         + "|".join(["-------"] * (len(comparison_df.columns) - 1))
@@ -785,9 +746,7 @@ def _render_metrics_table(
                 vals.append(f"{v:.4f}")
             else:
                 vals.append(str(v))
-        lines.append(
-            f"| {row['metric']} | " + " | ".join(vals) + " |"
-        )
+        lines.append(f"| {row['metric']} | " + " | ".join(vals) + " |")
     lines.append("")
     return lines
 
@@ -818,13 +777,10 @@ def _render_tradeoff_section(
 
     for name, result in all_results.items():
         fn = result.confusion_matrix_dict.get("false_negatives", 0)
-        fp = result.confusion_matrix_dict.get(
-            "false_positives", 0
-        )
+        fp = result.confusion_matrix_dict.get("false_positives", 0)
         total = result.cost_analysis.get("total_cost", 0.0)
         lines.append(
-            f"- **{name}:** FN={fn}, FP={fp}, "
-            f"Custo total=R$ {total:,.0f}"
+            f"- **{name}:** FN={fn}, FP={fp}, Custo total=R$ {total:,.0f}"
         )
     lines.append("")
     return lines
@@ -847,13 +803,10 @@ def _render_threshold_section(
     lines.append("")
     cols = threshold_df.columns.tolist()
     lines.append("| " + " | ".join(cols) + " |")
-    lines.append(
-        "|" + "|".join(["-------"] * len(cols)) + "|"
-    )
+    lines.append("|" + "|".join(["-------"] * len(cols)) + "|")
     for _, row in threshold_df.iterrows():
         vals = [
-            f"{row[c]:.4f}" if isinstance(row[c], float)
-            else str(row[c])
+            f"{row[c]:.4f}" if isinstance(row[c], float) else str(row[c])
             for c in cols
         ]
         lines.append("| " + " | ".join(vals) + " |")
@@ -897,16 +850,13 @@ def _render_calibration_section(
     lines.append("")
     for name, result in all_results.items():
         if result.calibration is not None:
-            brier = result.calibration.get(
-                "brier_score", float("nan")
-            )
+            brier = result.calibration.get("brier_score", float("nan"))
             ece = result.calibration.get(
                 "expected_calibration_error",
                 float("nan"),
             )
             lines.append(
-                f"- **{name}:** Brier Score = {brier:.4f}, "
-                f"ECE = {ece:.4f}"
+                f"- **{name}:** Brier Score = {brier:.4f}, ECE = {ece:.4f}"
             )
     lines.append("")
     return lines
@@ -930,32 +880,18 @@ def _render_conclusions(  # noqa: PLR0915
     )
     best_cost = min(
         all_results.items(),
-        key=lambda x: x[1].cost_analysis.get(
-            "total_cost", float("inf")
-        ),
+        key=lambda x: x[1].cost_analysis.get("total_cost", float("inf")),
     )
 
-    lines.append(
-        f"### Melhor Modelo por ROC-AUC: **{best_auc[0]}**"
-    )
-    lines.append(
-        f"- ROC-AUC = "
-        f"{best_auc[1].metrics.get('roc_auc', 0.0):.4f}"
-    )
+    lines.append(f"### Melhor Modelo por ROC-AUC: **{best_auc[0]}**")
+    lines.append(f"- ROC-AUC = {best_auc[1].metrics.get('roc_auc', 0.0):.4f}")
     lines.append("")
 
-    lines.append(
-        f"### Melhor Modelo por F1-Score: **{best_f1[0]}**"
-    )
-    lines.append(
-        f"- F1-Score = "
-        f"{best_f1[1].metrics.get('f1_score', 0.0):.4f}"
-    )
+    lines.append(f"### Melhor Modelo por F1-Score: **{best_f1[0]}**")
+    lines.append(f"- F1-Score = {best_f1[1].metrics.get('f1_score', 0.0):.4f}")
     lines.append("")
 
-    lines.append(
-        f"### Menor Custo de Negocio: **{best_cost[0]}**"
-    )
+    lines.append(f"### Menor Custo de Negocio: **{best_cost[0]}**")
     lines.append(
         f"- Custo total = R$ "
         f"{best_cost[1].cost_analysis.get('total_cost', 0.0):,.0f}"
@@ -1017,9 +953,7 @@ def _render_conclusions(  # noqa: PLR0915
     if mlp_result and logistic_result:
         mlp_auc = mlp_result.metrics.get("roc_auc", 0.0)
         log_auc = logistic_result.metrics.get("roc_auc", 0.0)
-        mlp_cost = mlp_result.cost_analysis.get(
-            "total_cost", float("inf")
-        )
+        mlp_cost = mlp_result.cost_analysis.get("total_cost", float("inf"))
         log_cost = logistic_result.cost_analysis.get(
             "total_cost", float("inf")
         )
@@ -1044,9 +978,7 @@ def _render_conclusions(  # noqa: PLR0915
                 "explicabilidade."
             )
     else:
-        lines.append(
-            "Dados insuficientes para recomendacao definitiva."
-        )
+        lines.append("Dados insuficientes para recomendacao definitiva.")
     lines.append("")
     return lines
 
@@ -1069,8 +1001,7 @@ def generate_markdown_report(
     lines: list[str] = []
 
     lines.append(
-        "# Comparacao: MLP vs Modelos Baseline "
-        "para Predicao de Churn"
+        "# Comparacao: MLP vs Modelos Baseline para Predicao de Churn"
     )
     lines.append("")
     lines.append(
@@ -1103,33 +1034,19 @@ def generate_markdown_report(
     # 7. Visualizacoes
     lines.append("## 7. Visualizacoes")
     lines.append("")
-    lines.append(
-        "As seguintes visualizacoes foram geradas em "
-        "`reports/`:"
-    )
+    lines.append("As seguintes visualizacoes foram geradas em `reports/`:")
     lines.append("")
+    lines.append("- `comparison_roc_curve.png`: Curva ROC comparativa")
     lines.append(
-        "- `comparison_roc_curve.png`: Curva ROC comparativa"
+        "- `comparison_pr_curve.png`: Curva Precision-Recall comparativa"
     )
-    lines.append(
-        "- `comparison_pr_curve.png`: "
-        "Curva Precision-Recall comparativa"
-    )
-    lines.append(
-        "- `comparison_confusion_matrices.png`: "
-        "Matrizes de confusao"
-    )
-    lines.append(
-        "- `comparison_cost.png`: Custo total por modelo"
-    )
+    lines.append("- `comparison_confusion_matrices.png`: Matrizes de confusao")
+    lines.append("- `comparison_cost.png`: Custo total por modelo")
     lines.append(
         "- `comparison_threshold_tradeoff.png`: "
         "Trade-off precision/recall/custo por threshold"
     )
-    lines.append(
-        "- `comparison_metrics_radar.png`: "
-        "Radar de metricas"
-    )
+    lines.append("- `comparison_metrics_radar.png`: Radar de metricas")
     lines.append("")
 
     return "\n".join(lines)
