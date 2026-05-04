@@ -37,6 +37,7 @@ from src.training import (
     train_logistic_classifier,
 )
 from src.training.mlflow_tracking import MLflowConfig, setup_mlflow
+from src.training.model_card import build_model_card
 
 
 @dataclass(frozen=True)
@@ -163,10 +164,11 @@ def main(argv: list[str] | None = None) -> int:
         for k, v in result["metrics"].items():
             mlflow.log_metric(f"test_{k}", v)
 
-        pipeline = result["model"]
         try:
             encoded_names = list(
-                pipeline.named_steps["preprocessor"].get_feature_names_out()
+                result["model"]
+                .named_steps["preprocessor"]
+                .get_feature_names_out()
             )
         except (AttributeError, KeyError):
             encoded_names = prepared.feature_names
@@ -174,8 +176,7 @@ def main(argv: list[str] | None = None) -> int:
         mlflow.log_param("encoded_features", len(encoded_names))
 
         try:
-            classifier = pipeline.named_steps["classifier"]
-            coefs = classifier.coef_[0]
+            coefs = result["model"].named_steps["classifier"].coef_[0]
         except (AttributeError, KeyError):
             coefs = np.zeros(len(encoded_names))
 
@@ -190,7 +191,19 @@ def main(argv: list[str] | None = None) -> int:
         coef_df.to_csv(coef_path, index=False)
         mlflow.log_artifact(str(coef_path))
 
-        mlflow.sklearn.log_model(pipeline, "model")
+        card_values: dict[str, str | int | float] = {
+            "random_seed": RANDOM_SEED,
+            "dataset_version": dataset_version,
+        }
+        for k, vr in result["metrics"].items():
+            card_values[k] = vr
+        card_values.update(cv_results)  # type: ignore[arg-type]
+        mlflow.log_dict(
+            build_model_card("logistic", **card_values),
+            "model_card.json",
+        )
+
+        mlflow.sklearn.log_model(result["model"], "model")
 
     print("[Logistic] Treino concluido com sucesso.")
     print(
