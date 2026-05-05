@@ -56,6 +56,21 @@ modelagem, rastreamento, serviço e observabilidade:
 8. **Observabilidade** Prometheus + Grafana com dashboards
    provisionados
 
+### Nota sobre o ML Canvas
+
+![ML CANVAS](docs/ML_CANVAS.png)
+
+O **ML Canvas** (disponível em `docs/ML_CANVAS.pdf`) descreve um **cenário futuro e ideal** de produção para o projeto de churn, projetando um ambiente operacional completo com, por exemplo: pipeline de batch diário (scoring à meia-noite UTC), escala de ~365M linhas (24 meses de histórico), integração operacional com CRM, CS, Marketing e Sales, cache Redis, fallbacks, shadow mode, canary deploy governança LGPD. Esses elementos compõem um **cenário lúdico de enriquecimento**, útil para demonstrar visão de produto e planejamento de MLOps, mas **não fazem parte dos requisitos do Tech Challenge Fase 1**.
+
+O código deste repositório implementa estritamente os entregáveis das **4 Etapas do Desafio**:
+
+| Etapa | Foco | Conformidade |
+|-------|------|--------------|
+| Etapa 1 | EDA, baselines (Dummy + Logistic), métricas (AUC-ROC, PR-AUC, F1), custo de negócio, MLflow | Conforme |
+| Etapa 2 | MLP PyTorch, early stopping, comparação >= 4 métricas, trade-off FN/FP | Conforme |
+| Etapa 3 | Refatoração `src/`, API FastAPI, Pydantic, logging, testes pytest, Makefile | Conforme |
+| Etapa 4 | Model Card, documentação de deploy e monitoramento, README, vídeo STAR | Conforme |
+
 ## Resultados
 
 ### Tabela Comparativa
@@ -208,7 +223,15 @@ Variáveis essenciais no `.env`:
 | `POSTGRES_USER` / `POSTGRES_PASSWORD` | Credenciais MLflow DB | `mlflow` / `mlflow_secure_password_2024` |
 | `MINIO_ACCESS_KEY` / `MINIO_SECRET_KEY` | Credenciais MinIO | `minioadmin` / `minioadmin_secret_key_2024` |
 | `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` | Credenciais S3 | mesmo do MinIO |
-| `API_PORT` | Porta da API | `8000` |
+| `MLFLOW_PORT` | Porta do MLflow Server | `5000` |
+| `MLFLOW_WORKERS` | Workers do Gunicorn | `2` |
+| `API_PORT` | Porta da API FastAPI | `8000` |
+| `LOG_LEVEL` | Nivel de log (DEBUG, INFO, WARNING, ERROR) | `INFO` |
+| `LOG_FORMAT` | Formato de log (json ou text) | `json` |
+| `PREDICTION_SLO_MS` | Limiar de latencia SLO em ms | `500.0` |
+| `GRAFANA_ADMIN_USER` | Usuario admin do Grafana | `admin` |
+| `GRAFANA_ADMIN_PASSWORD` | Senha admin do Grafana | `admin` |
+| `DVC_ONEDRIVE_REMOTE_URL` | URL do remote DVC (OneDrive) | *(vazio)* |
 
 > Nunca versionar o arquivo `.env` com credenciais reais.
 
@@ -246,8 +269,9 @@ Saída de cada pipeline:
 | `train-mlp` | Modelo em `models/churn_mlp_best.pt`, scaler em `models/scaler.pkl`, artefatos no MLflow |
 | `train-logistic` | Modelo registrado no MLflow + cross-validation |
 | `tune-mlp` | Estudo Optuna em `reports/optuna_study.csv` |
-| `compare-models` | `MLP_VERSUS_BASELINE.md` com tabela comparativa |
+| `compare-models` | `docs/MLP_VERSUS_BASELINE.md` com tabela comparativa |
 | `analyze` | `reports/mlflow_analysis.csv` + `reports/experiment_comparison.md` |
+| `validate-model` | `reports/model_validation.json` com status OK/WARNING/CRITICAL |
 
 ### Inferência
 
@@ -263,26 +287,20 @@ make api-down     # Para todos os containers (API, Prometheus, Grafana)
 
 A stack de monitoramento sobe automaticamente com `make api-up`:
 
-- **API**: http://localhost:8000 — endpoints `/health`, `/predict`, `/metrics`
-- **Prometheus**: http://localhost:9090 — scraping metricas a cada 15s
-- **Grafana**: http://localhost:3000 — dashboards pre-provisionados (login: admin/admin)
+- **API**: http://localhost:8000 -- endpoints `/health`, `/predict`, `/metrics`
+- **Prometheus**: http://localhost:9090 -- scraping de metricas a cada 15s
+- **Grafana**: http://localhost:3000 -- dashboards pre-provisionados (login: admin/admin)
 
 Dashboards disponiveis:
+
 - *API Churn - Metricas Operacionais*: latencia, throughput, erros, predicoes
 - *API Churn - Data Drift*: deteccoes de drift, PSI por feature, distribuicao de probabilidades
-```
 
-### Monitoramento (Prometheus + Grafana)
+Detalhes completos em [`docs/MONITORAMENTO.md`](docs/MONITORAMENTO.md).
 
-A stack de monitoramento sobe automaticamente com `make api-up`:
+### Recuperar Modelo do MLflow
 
-- **API**: http://localhost:8000 — endpoints `/health`, `/predict`, `/metrics`
-- **Prometheus**: http://localhost:9090 — scraping metricas a cada 15s
-- **Grafana**: http://localhost:3000 — dashboards pre-provisionados (login: admin/admin)
-
-Dashboards disponiveis:
-- *API Churn - Metricas Operacionais*: latencia, throughput, erros, predicoes
-- *API Churn - Data Drift*: deteccoes de drift, PSI por feature, distribuicao de probabilidades
+```bash
 uv run python -m src.inference.recover_model \
     --model-type mlp \
     --output models/recovered
